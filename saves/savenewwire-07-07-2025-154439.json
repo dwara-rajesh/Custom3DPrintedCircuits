@@ -1,0 +1,138 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -2.5,
+            "posY": -1.5,
+            "dimX": 5.0,
+            "dimY": 3.0,
+            "dimZ": 2.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\battery.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\battery.f3d",
+            "posX": -2.5149801587301592,
+            "posY": -1.3526785714285712,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\button.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\button.f3d",
+            "posX": -0.6212301587301586,
+            "posY": -0.6212301587301584,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\LED.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\LED.f3d",
+            "posX": -0.6212301587301589,
+            "posY": -2.570089285714286,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 270
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\microcontroller.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\microcontroller.f3d",
+            "posX": -4.278472222222221,
+            "posY": -1.4679067460317454,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 180
+        }
+    ],
+    "wiresdata": [
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -0.6262896825396822,
+                    "posY": -0.22748015873015892
+                },
+                {
+                    "posX": -4.23844246031746,
+                    "posY": -0.2775793650793652
+                },
+                {
+                    "posX": -4.268501984126984,
+                    "posY": -0.9939980158730161
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -4.288541666666666,
+                    "posY": -1.940873015873016
+                },
+                {
+                    "posX": -4.333630952380952,
+                    "posY": -2.7023809523809526
+                },
+                {
+                    "posX": -0.6162698412698411,
+                    "posY": -2.7124007936507937
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -2.159325396825397,
+                    "posY": -1.3446924603174604
+                },
+                {
+                    "posX": -0.6112599206349205,
+                    "posY": -1.4098214285714286
+                },
+                {
+                    "posX": -0.6262896825396822,
+                    "posY": -0.9939980158730161
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -0.631299603174603,
+                    "posY": -2.406795634920635
+                },
+                {
+                    "posX": -3.021031746031746,
+                    "posY": -2.381746031746032
+                },
+                {
+                    "posX": -3.081150793650793,
+                    "posY": -1.324652777777778
+                },
+                {
+                    "posX": -2.8607142857142853,
+                    "posY": -1.3296626984126985
+                }
+            ],
+            "pole": "n"
+        }
+    ]
+}

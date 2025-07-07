@@ -1,0 +1,29 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -3.0,
+            "posY": -3.0,
+            "dimX": 6.0,
+            "dimY": 6.0,
+            "dimZ": 6.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\battery.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\battery.f3d",
+            "posX": 0.042149631190727094,
+            "posY": 9.880952380952388,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        }
+    ],
+    "wiresdata": []
+}

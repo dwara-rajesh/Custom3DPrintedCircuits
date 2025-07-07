@@ -1,0 +1,65 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -2.5,
+            "posY": -1.5,
+            "dimX": 5.0,
+            "dimY": 3.0,
+            "dimZ": 2.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\models\\battery.obj",
+            "f3dName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\battery.f3d",
+            "posX": -4.979999999999996,
+            "posY": -0.14,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        },
+        {
+            "modelName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\models\\button.obj",
+            "f3dName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\button.f3d",
+            "posX": 7.632783294297951e-17,
+            "posY": -4.579669976578771e-16,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        },
+        {
+            "modelName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\models\\LED.obj",
+            "f3dName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\LED.f3d",
+            "posX": 6.938893903907228e-18,
+            "posY": -2.940000000000001,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 270
+        },
+        {
+            "modelName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\models\\microcontroller.obj",
+            "f3dName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\microcontroller.f3d",
+            "posX": -4.899999999999999,
+            "posY": -2.9600000000000004,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 180
+        }
+    ],
+    "wiresdata": []
+}

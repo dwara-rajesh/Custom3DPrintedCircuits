@@ -1,0 +1,86 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -2.5,
+            "posY": -1.5,
+            "dimX": 5.0,
+            "dimY": 3.0,
+            "dimZ": 2.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\battery.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\battery.f3d",
+            "posX": -4.48888888888889,
+            "posY": -0.536061507936508,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\button.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\button.f3d",
+            "posX": -0.5711309523809524,
+            "posY": -0.5310515873015873,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\LED.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\LED.f3d",
+            "posX": -0.5711309523809525,
+            "posY": -2.44484126984127,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 270
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\models\\microcontroller.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\microcontroller.f3d",
+            "posX": -4.57906746031746,
+            "posY": -2.304563492063492,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 180
+        }
+    ],
+    "wiresdata": [
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -3.812599206349206,
+                    "posY": -2.737450396825397
+                },
+                {
+                    "posX": -1.683382936507937,
+                    "posY": -2.687351190476191
+                },
+                {
+                    "posX": -1.7535218253968252,
+                    "posY": -1.730456349206349
+                },
+                {
+                    "posX": -3.5821428571428573,
+                    "posY": -1.9609126984126983
+                }
+            ]
+        }
+    ]
+}

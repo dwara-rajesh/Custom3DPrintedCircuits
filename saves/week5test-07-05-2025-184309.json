@@ -1,0 +1,114 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -2.5,
+            "posY": -1.5,
+            "dimX": 5.0,
+            "dimY": 3.0,
+            "dimZ": 2.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\models\\battery.obj",
+            "f3dName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\battery.f3d",
+            "posX": -4.359999999999998,
+            "posY": -0.78,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        },
+        {
+            "modelName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\models\\button.obj",
+            "f3dName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\button.f3d",
+            "posX": -0.86,
+            "posY": -0.7000000000000002,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        },
+        {
+            "modelName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\models\\LED.obj",
+            "f3dName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\LED.f3d",
+            "posX": -0.7199999999999998,
+            "posY": -2.24,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 270
+        },
+        {
+            "modelName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\models\\microcontroller.obj",
+            "f3dName": "C:\\Users\\dwara\\OneDrive\\Desktop\\BU\\Internship\\GUICADCAM Python\\assets\\f3ds\\microcontroller.f3d",
+            "posX": -4.339999999999999,
+            "posY": -2.06,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 180
+        }
+    ],
+    "wiresdata": [
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -4.36,
+                    "posY": -1.120000000000001
+                },
+                {
+                    "posX": -4.300000000000001,
+                    "posY": -1.6799999999999993
+                }
+            ]
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -4.379999999999999,
+                    "posY": -2.56
+                },
+                {
+                    "posX": -0.7599999999999996,
+                    "posY": -2.36
+                }
+            ]
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -0.7399999999999995,
+                    "posY": -2.0799999999999996
+                },
+                {
+                    "posX": -0.8799999999999997,
+                    "posY": -1.120000000000001
+                }
+            ]
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -0.9199999999999997,
+                    "posY": -0.3200000000000003
+                },
+                {
+                    "posX": -4.0600000000000005,
+                    "posY": -0.6400000000000006
+                }
+            ]
+        }
+    ]
+}
