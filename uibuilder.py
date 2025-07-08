@@ -1,12 +1,12 @@
 # uibuilder.py
-import os, json, datetime, subprocess, trimesh
+import os, json, datetime, subprocess, trimesh, math
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QPushButton, QWidget, QDialog,
     QHBoxLayout, QLabel, QLineEdit, QComboBox, QScrollArea, QWidget, QGridLayout
 )
-from PyQt5.QtGui import QDoubleValidator, QPixmap
+from PyQt5.QtGui import QDoubleValidator, QPixmap, QValidator
 from viewer import OpenGLViewer #Import OpenGL Viewer from viewer.py
 
 class CircuitBuilderWindow(QMainWindow):
@@ -117,6 +117,46 @@ class CircuitBuilderWindow(QMainWindow):
         self.saveconfirmtext.hide()
         self.saveconfirmtext.setEnabled(False)
 
+        #Position Set UI
+        self.position_ui = QWidget()
+        self.currentposx = QLabel()
+        self.currentposx.setStyleSheet("border: 2px solid black;")
+        self.currentposy = QLabel()
+        self.currentposy.setStyleSheet("border: 2px solid black;")
+        self.posoffset_x_in = QLineEdit()
+        self.posoffset_x_in.setPlaceholderText("Enter offset from current position in x axis")
+        self.posoffset_y_in = QLineEdit()
+        self.posoffset_y_in.setPlaceholderText("Enter offset from current position in y axis")
+        self.posoffsetvaliditytext = QLabel()
+        self.posoffsetvaliditytext.setStyleSheet("color: red;")
+        self.last_validator_scales = (None,None)
+
+        self.previewposbutton = QPushButton("Preview Position")
+        self.previewposbutton.clicked.connect(self.apply_position_change)
+
+        self.setposbutton = QPushButton("Set Position")
+        self.setposbutton.clicked.connect(self.submitpos)
+
+        pos_ui_layout = QHBoxLayout(self.position_ui)
+        pos_ui_layout.addWidget(self.currentposx)
+        pos_ui_layout.addWidget(self.currentposy)
+        pos_ui_layout.addWidget(QLabel("X_offset (in): "))
+        pos_ui_layout.addWidget(self.posoffset_x_in)
+        pos_ui_layout.addWidget(QLabel("Y_offset (in): "))
+        pos_ui_layout.addWidget(self.posoffset_y_in)
+        pos_ui_layout.addWidget(self.posoffsetvaliditytext)
+        pos_ui_layout.addWidget(self.previewposbutton)
+        pos_ui_layout.addWidget(self.setposbutton)
+
+        self.position_ui.hide()
+        self.position_ui.setEnabled(False)
+
+        #Confirm selection UI
+        self.selectedtext = QLabel("Select objects before pressing M")
+        self.selectedtext.setStyleSheet("color: red;")
+        self.selectedtext.hide()
+        self.selectedtext.setEnabled(False)
+
         #WorkSpace UI
         self.viewer = OpenGLViewer()
 
@@ -127,6 +167,8 @@ class CircuitBuilderWindow(QMainWindow):
         layout.addWidget(self.stockdimensionsui, alignment = Qt.AlignTop)
         layout.addWidget(self.saveUI, alignment = Qt.AlignTop)
         layout.addWidget(self.saveconfirmtext, alignment = Qt.AlignTop)
+        layout.addWidget(self.position_ui, alignment = Qt.AlignTop)
+        layout.addWidget(self.selectedtext, alignment = Qt.AlignTop)
 
         layout.addWidget(self.viewer, stretch = 1)
 
@@ -258,6 +300,7 @@ class CircuitBuilderWindow(QMainWindow):
     def delay(self):
         self.saveconfirmtext.setText("")
         self.saveconfirmtext.hide()
+        self.saveconfirmtext.setEnabled(False)
 
         if self.uploadfile:
             fusion_path = r"C:\Users\dwara\AppData\Local\Autodesk\webdeploy\production\6a0c9611291d45bb9226980209917c3d\FusionLauncher.exe"
@@ -280,17 +323,23 @@ class CircuitBuilderWindow(QMainWindow):
         elif text == "SAVE":
             self.header.hide()
             self.header.setEnabled(False)
+            self.position_ui.hide()
+            self.position_ui.setEnabled(False)
             self.saveUI.show()
             self.saveUI.setEnabled(True)
         elif text == "UPLOAD":
             self.uploadfile = True
             self.header.hide()
             self.header.setEnabled(False)
+            self.position_ui.hide()
+            self.position_ui.setEnabled(False)
             self.saveUI.show()
             self.saveUI.setEnabled(True)
         elif text == "MENU":
             self.saveUI.hide()
             self.saveUI.setEnabled(False)
+            self.position_ui.hide()
+            self.position_ui.setEnabled(False)
             self.header.show()
             self.header.setEnabled(True)
 
@@ -327,6 +376,7 @@ class CircuitBuilderWindow(QMainWindow):
                                             'rotX': 0.0, 'rotY': 0.0, 'rotZ': 0.0})
             self.stock_model_data = self.components[0]
             self.viewer.stockdrawn = True
+            self.update_offset_validators()
         else:
            self.warningstockdimuitext.setText("ENTER ALL DIMENSIONS")
 
@@ -337,6 +387,78 @@ class CircuitBuilderWindow(QMainWindow):
             self.viewer.load_model(self.selectedobjpath)
             if self.dropdown.findText("MENU") != -1:
                 self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_M and self.viewer.stockdrawn:
+            self.header.hide()
+            self.header.setEnabled(False)
+            self.saveUI.hide()
+            self.saveUI.setEnabled(False)
+            position = self.get_selected_position()
+            if position == None:
+                self.position_ui.hide()
+                self.position_ui.setEnabled(False)
+                self.selectedtext.show()
+                self.selectedtext.setEnabled(True)
+                QTimer.singleShot(1000, self.submitpos)
+            else:
+                self.selectedtext.hide()
+                self.selectedtext.setEnabled(False)
+                self.position_ui.show()
+                self.position_ui.setEnabled(True)
+
+    def get_selected_position(self):
+        if self.viewer.selected_model_indices:
+            xpos = self.viewer.loadedmodels[self.viewer.selected_model_indices[-1]]['position'][0]
+            ypos = self.viewer.loadedmodels[self.viewer.selected_model_indices[-1]]['position'][1]
+            self.currentposx.setText(f"Current X Position: {str(xpos)}")
+            self.currentposy.setText(f"Current Y Position: {str(ypos)}")
+            return [xpos,ypos]
+        elif self.viewer.selected_node_indices:
+            xpos = self.viewer.wirenodesdata[self.viewer.selected_node_indices[-1]]['posX']
+            ypos = self.viewer.wirenodesdata[self.viewer.selected_node_indices[-1]]['posY']
+            self.currentposx.setText(f"Current X Position: {str(xpos)}")
+            self.currentposy.setText(f"Current Y Position: {str(ypos)}")
+            return [xpos,ypos]
+        return None
+
+    def update_offset_validators(self):
+        self.posoffset_x_in.setValidator(QDoubleValidator(-self.stock_model_data['dimX'], self.stock_model_data['dimX'], 2))
+        self.posoffset_y_in.setValidator(QDoubleValidator(-self.stock_model_data['dimY'], self.stock_model_data['dimY'], 2))
+
+    def apply_position_change(self):
+        if self.posoffset_x_in.validator().validate(self.posoffset_x_in.text(), 0)[0] != QValidator.Acceptable or self.posoffset_y_in.validator().validate(self.posoffset_y_in.text(), 0)[0] != QValidator.Acceptable:
+            self.posoffsetvaliditytext.setText("Enter valid offset")
+        else:
+            self.posoffsetvaliditytext.setText("")
+            try:
+                xoff = float(self.posoffset_x_in.text())
+                yoff = -float(self.posoffset_y_in.text())
+            except:
+                xoff = 0.0
+                yoff = 0.0
+                self.posoffsetvaliditytext.setText("Offset parse error")
+
+            self.viewer.selected_position(xoff,yoff)
+            self.get_selected_position()
+
+    def submitpos(self):
+        self.selectedtext.hide()
+        self.selectedtext.setEnabled(False)
+        self.position_ui.hide()
+        self.position_ui.setEnabled(False)
+        self.saveUI.hide()
+        self.saveUI.setEnabled(False)
+        self.position_ui.hide()
+        self.position_ui.setEnabled(False)
+        self.header.show()
+        self.header.setEnabled(True)
+        if self.viewer.selected_model_indices: #and not self.viewer.multiselect:
+            self.viewer.selected_model_indices.clear()
+            self.viewer.update()
+        if self.viewer.selected_node_indices: # and not self.viewer.multiselect:
+            self.viewer.selected_node_indices.clear()
+            self.viewer.update()
 
 class Selection(QDialog): #Load component menu - shows sall available components for selection
     def __init__(self, parent = None):

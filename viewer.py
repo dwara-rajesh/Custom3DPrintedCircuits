@@ -1,18 +1,17 @@
 # viewer.py
 from PyQt5.QtWidgets import QOpenGLWidget, QSizePolicy
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtGui import QMouseEvent, QDoubleValidator
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import trimesh, time
+import trimesh
 from trimesh.ray.ray_pyembree import RayMeshIntersector
 import numpy as np
 
 class OpenGLViewer(QOpenGLWidget):
     def __init__(self):
         super(OpenGLViewer, self).__init__()
-        self.last_frame_time = time.time()
         #Set up widget for key presses
         self.setFocusPolicy(Qt.StrongFocus)
 
@@ -41,7 +40,7 @@ class OpenGLViewer(QOpenGLWidget):
         self.posycam = (0,1,0)
 
         #MultiSelect Feature
-        self.multiselect = False
+        # self.multiselect = False
         #Draw Wire Node Feature
         self.drawwirenode = False
 
@@ -107,9 +106,27 @@ class OpenGLViewer(QOpenGLWidget):
             glEnd()
 
         self.orient_camera()
-        now = time.time()
-        print(f"FPS: {1/(now - self.last_frame_time):.1f}")
-        self.last_frame_time = now
+
+    def selected_position(self,dx,dy):
+        if self.selected_model_indices:
+            for index in self.selected_model_indices:
+                self.loadedmodels[index]['position'][0] += dx
+                self.loadedmodels[index]['position'][1] -= dy
+
+                transformed_meshes = []
+                for mesh in self.loadedmodels[index]['meshes']:
+                    mesh.apply_translation([dx, -dy, 0])
+                    transformed_meshes.append(mesh)
+                self.loadedmodels[index]['meshes'] = transformed_meshes
+
+        if self.selected_node_indices: #check if any node selected
+             for selected_node_index in self.selected_node_indices:
+                # Update position
+                self.wirenodesdata[selected_node_index]['posX'] += dx
+                self.wirenodesdata[selected_node_index]['posY'] -= dy
+
+        if self.selected_model_indices or self.selected_node_indices:
+            self.update()
 
     def draw_model(self, mesh, i):
         #get faces and vertices
@@ -236,8 +253,8 @@ class OpenGLViewer(QOpenGLWidget):
                     else:
                         self.selected_model_indices.remove(i)
                     self.update()
-                    if not self.multiselect:
-                        break
+                    # if not self.multiselect:
+                    #     break
                 else:
                     hitornot.append(False)
 
@@ -250,8 +267,8 @@ class OpenGLViewer(QOpenGLWidget):
                     else:
                         self.selected_node_indices.remove(i)
                     self.update()
-                    if not self.multiselect:
-                        break
+                    # if not self.multiselect:
+                    #     break
                 else:
                     hitornot.append(False)
 
@@ -268,54 +285,54 @@ class OpenGLViewer(QOpenGLWidget):
             self.update()
 
 
-    def mouseMoveEvent(self, event): #when mouse dragged
-        if self.selected_model_indices: #check if any model selected
-            dx = event.x() - self.last_mouse_pos.x()
-            dy = event.y() - self.last_mouse_pos.y()
+    # def mouseMoveEvent(self, event): #when mouse dragged
+    #     if self.selected_model_indices: #check if any model selected
+    #         dx = event.x() - self.last_mouse_pos.x()
+    #         dy = event.y() - self.last_mouse_pos.y()
 
-            # Convert pixel movement to world coordinates (approximate)
-            dx_world = dx * (2 * self.scalex / self.width())
-            dy_world = dy * (2 * self.scaley / self.height())
+    #         # Convert pixel movement to world coordinates (approximate)
+    #         dx_world = dx * (2 * self.scalex / self.width())
+    #         dy_world = dy * (2 * self.scaley / self.height())
 
-            for selected_model_index in self.selected_model_indices:
-                selectedmodel = self.loadedmodels[selected_model_index]
-                # Update position
-                selectedmodel['position'][0] += dx_world
-                selectedmodel['position'][1] -= dy_world
+    #         for selected_model_index in self.selected_model_indices:
+    #             selectedmodel = self.loadedmodels[selected_model_index]
+    #             # Update position
+    #             selectedmodel['position'][0] += dx_world
+    #             selectedmodel['position'][1] -= dy_world
 
-                transformed_meshes = []
-                for mesh in selectedmodel['meshes']:
-                    mesh.apply_translation([dx_world, -dy_world, 0])
-                    transformed_meshes.append(mesh)
-                self.loadedmodels[selected_model_index]['meshes'] = transformed_meshes
-                self.loadedmodels[selected_model_index]['position'] = selectedmodel['position']
+    #             transformed_meshes = []
+    #             for mesh in selectedmodel['meshes']:
+    #                 mesh.apply_translation([dx_world, -dy_world, 0])
+    #                 transformed_meshes.append(mesh)
+    #             self.loadedmodels[selected_model_index]['meshes'] = transformed_meshes
+    #             self.loadedmodels[selected_model_index]['position'] = selectedmodel['position']
 
-        if self.selected_node_indices: #check if any node selected
-            dx = event.x() - self.last_mouse_pos.x()
-            dy = event.y() - self.last_mouse_pos.y()
+    #     if self.selected_node_indices: #check if any node selected
+    #         dx = event.x() - self.last_mouse_pos.x()
+    #         dy = event.y() - self.last_mouse_pos.y()
 
-            # Convert pixel movement to world coordinates (approximate)
-            dx_world = dx * (2 * self.scalex / self.width())
-            dy_world = dy * (2 * self.scaley / self.height())
+    #         # Convert pixel movement to world coordinates (approximate)
+    #         dx_world = dx * (2 * self.scalex / self.width())
+    #         dy_world = dy * (2 * self.scaley / self.height())
 
-            for selected_node_index in self.selected_node_indices:
-                # Update position
-                self.wirenodesdata[selected_node_index]['posX'] += dx_world
-                self.wirenodesdata[selected_node_index]['posY'] -= dy_world
+    #         for selected_node_index in self.selected_node_indices:
+    #             # Update position
+    #             self.wirenodesdata[selected_node_index]['posX'] += dx_world
+    #             self.wirenodesdata[selected_node_index]['posY'] -= dy_world
 
-        if self.selected_model_indices or self.selected_node_indices:
-            self.last_mouse_pos = event.pos()
-            self.update()
-        else:
-            self.update()
+    #     if self.selected_model_indices or self.selected_node_indices:
+    #         self.last_mouse_pos = event.pos()
+    #         self.update()
+    #     else:
+    #         self.update()
 
-    def mouseReleaseEvent(self, event):
-        if self.selected_model_indices and not self.multiselect:
-            self.selected_model_indices.clear()
-            self.update()
-        if self.selected_node_indices and not self.multiselect:
-            self.selected_node_indices.clear()
-            self.update()
+    # def mouseReleaseEvent(self, event):
+    #     if self.selected_model_indices and not self.multiselect:
+    #         self.selected_model_indices.clear()
+    #         self.update()
+    #     if self.selected_node_indices and not self.multiselect:
+    #         self.selected_node_indices.clear()
+    #         self.update()
 
     def screen_to_ray(self, x, y):
         # Convert screen coordinates to normalized device coordinates [-1, 1]
@@ -384,14 +401,20 @@ class OpenGLViewer(QOpenGLWidget):
         self.update()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Shift:
-            self.multiselect = True
+        # if event.key() == Qt.Key_Shift:
+        #     self.multiselect = True
 
         if event.key() == Qt.Key_R:
             self.rotate_selected()
 
         if event.key() == Qt.Key_N:
             self.n_pressed = True
+
+        if event.key() == Qt.Key_M:
+            parent = self.parent()
+            if parent:
+                parent.keyPressEvent(event)
+            return
 
         if event.key() == Qt.Key_Delete:
             self.delete_selected()
@@ -413,8 +436,8 @@ class OpenGLViewer(QOpenGLWidget):
                 print("Not Enough nodes")
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Shift:
-            self.multiselect = False
+        # if event.key() == Qt.Key_Shift:
+        #     self.multiselect = False
 
         if event.key() == Qt.Key_W:
             self.drawwirenode = False

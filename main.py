@@ -18,8 +18,8 @@ class HomeWindow(QWidget):
         epic_logo_label = QLabel()
         meche_logo_label = QLabel()
         #Load logos onto label
-        epic_pixmap = QPixmap("assets/homescreen/epiclogo.png")
-        meche_pixmap = QPixmap("assets/homescreen/mechelogo.png")
+        epic_pixmap = QPixmap(r"assets\homescreen\epiclogo.png")
+        meche_pixmap = QPixmap(r"assets\homescreen\mechelogo.png")
 
         epic_logo_label.setPixmap(epic_pixmap.scaled(250, 250, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         meche_logo_label.setPixmap(meche_pixmap.scaled(250, 250, Qt.KeepAspectRatio, Qt.SmoothTransformation))
