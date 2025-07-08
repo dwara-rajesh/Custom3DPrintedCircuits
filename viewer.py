@@ -1,7 +1,7 @@
 # viewer.py
 from PyQt5.QtWidgets import QOpenGLWidget, QSizePolicy
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QMouseEvent, QDoubleValidator
+from PyQt5.QtGui import QMouseEvent
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
