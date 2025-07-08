@@ -292,6 +292,7 @@ class CircuitBuilderWindow(QMainWindow):
             self.header.setEnabled(True)
             self.goback = False
             self.savefile = False
+            self.closeproj = False
             self.savewarningtext.setText("")
             if self.dropdown.findText("MENU") != -1:
                     self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
