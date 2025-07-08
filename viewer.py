@@ -375,7 +375,6 @@ class OpenGLViewer(QOpenGLWidget):
         if not self.selected_model_indices and not self.selected_node_indices:
             return
 
-
         for i in sorted(self.selected_model_indices, reverse=True):
             del self.loadedmodels[i]
 

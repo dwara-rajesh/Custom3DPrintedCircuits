@@ -20,7 +20,7 @@ class HomeWindow(QWidget):
         #Load logos onto label
         epic_pixmap = QPixmap(r"assets\homescreen\epiclogo.png")
         meche_pixmap = QPixmap(r"assets\homescreen\mechelogo.png")
-
+        #Scale while keeping aspect ratio
         epic_logo_label.setPixmap(epic_pixmap.scaled(250, 250, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         meche_logo_label.setPixmap(meche_pixmap.scaled(250, 250, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
@@ -81,7 +81,7 @@ class HomeWindow(QWidget):
         self.loadfilewarningtext.setStyleSheet("color: red;")
 
         bottomlayout = QVBoxLayout()
-        bottomlayout.addWidget(self.loadfileinputfield, alignment= Qt.AlignCenter) #Add inputfield widget to mainlayout
+        bottomlayout.addWidget(self.loadfileinputfield, alignment= Qt.AlignCenter) #Add inputfield widget to layout
         bottomlayout.addWidget(self.loadfilewarningtext, alignment= Qt.AlignCenter)
 
         mainlayout.addLayout(bottomlayout)
@@ -91,26 +91,27 @@ class HomeWindow(QWidget):
         self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint) #Make window borderless
         self.showFullScreen() #Make window fullscreen
 
+        #Define load folder
         self.working_dir = os.getcwd()
         self.load_folder = r"saves"
         self.load_folderpath = os.path.join(self.working_dir, self.load_folder)
 
     def open_builder(self, load):
-        if (load):
-            if self.loadfileinputfield.text() == "":
+        if (load): #If load button is pressed
+            if self.loadfileinputfield.text() == "": #Check valid filename
                 self.loadfilewarningtext.setText("ENTER FILENAME")
                 return
             elif self.loadfileinputfield.text():
                 filename = self.loadfileinputfield.text() + ".json"
                 fullpath = os.path.join(self.load_folderpath, filename)
 
-                if not os.path.exists(fullpath):
+                if not os.path.exists(fullpath): #Check if file exists
                     self.loadfilewarningtext.setText("FILE NOT FOUND")
                     return
-                else:
+                else: #Notify user that it is loading
                     self.loadfilewarningtext.setStyleSheet("color: black;")
                     self.loadfilewarningtext.setText(f"LOADING: {fullpath}")
-                    QTimer.singleShot(2000, lambda: self.delay(fullpath))
+                    QTimer.singleShot(2000, lambda: self.delay(fullpath)) #Load file
         else:
             self.builder = CircuitBuilderWindow() #Instantiate an object to load circuit builder window i.e. the workspace/workarea
             self.builder.show() #Display the workspace window

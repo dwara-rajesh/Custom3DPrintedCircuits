@@ -22,8 +22,10 @@ class CircuitBuilderWindow(QMainWindow):
         self.showFullScreen() #Make window fullscreen
 
     def initUI(self):
+        #Initialize data storage variables
         self.components = []
         self.stock_model_data = None
+
         #Header UI
         self.header = QWidget()
         #Header UI Variables
@@ -35,7 +37,6 @@ class CircuitBuilderWindow(QMainWindow):
         home_button.clicked.connect(self.go_home)
         close_button = QPushButton("CLOSE")
         close_button.clicked.connect(self.to_close)
-
         #Header UI Layout
         header_layout = QHBoxLayout(self.header)
         header_layout.addWidget(self.dropdown)
@@ -43,7 +44,6 @@ class CircuitBuilderWindow(QMainWindow):
         header_layout.addStretch()
         header_layout.addWidget(home_button)
         header_layout.addWidget(close_button)
-
         #Disable & Hide Header Widget - initially
         self.header.hide()
         self.header.setEnabled(False)
@@ -53,15 +53,15 @@ class CircuitBuilderWindow(QMainWindow):
         #Stock Dimensions UI Variables
         self.length_input = QLineEdit()
         self.length_input.setPlaceholderText("ENTER LENGTH OF STOCK IN INCHES...")
-        self.length_input.setValidator(QDoubleValidator(0.0, 10000.0, 2))
+        self.length_input.setValidator(QDoubleValidator(0.0, 10000.0, 4))
         self.length_input.textChanged.connect(self.update_stock_dims)
         self.width_input = QLineEdit()
         self.width_input.setPlaceholderText("ENTER WIDTH OF STOCK IN INCHES...")
-        self.width_input.setValidator(QDoubleValidator(0.0, 10000.0, 2))
+        self.width_input.setValidator(QDoubleValidator(0.0, 10000.0, 4))
         self.width_input.textChanged.connect(self.update_stock_dims)
         self.height_input = QLineEdit()
         self.height_input.setPlaceholderText("ENTER HEIGHT OF STOCK IN INCHES...")
-        self.height_input.setValidator(QDoubleValidator(0.0, 10000.0, 2))
+        self.height_input.setValidator(QDoubleValidator(0.0, 10000.0, 4))
         self.height_input.textChanged.connect(self.update_stock_dims)
         self.warningstockdimuitext = QLabel()
         self.warningstockdimuitext.setStyleSheet("color: red;")
@@ -69,7 +69,6 @@ class CircuitBuilderWindow(QMainWindow):
         submit_button.clicked.connect(self.generate_stock)
         home_button = QPushButton("HOME")
         home_button.clicked.connect(self.go_home)
-
         #Stock Dimensions UI Layout
         dim_layout = QHBoxLayout(self.stockdimensionsui)
         dim_layout.addWidget(QLabel("Length (in):"))
@@ -82,10 +81,12 @@ class CircuitBuilderWindow(QMainWindow):
         dim_layout.addWidget(submit_button)
         dim_layout.addWidget(home_button)
 
-        #Save UI Variables/ UI Components
+        #Save UI Variables / UI Components
+        #Initialize save folder
+        self.working_dir = os.getcwd()
+        self.save_folder = r"saves"
+        self.save_folderpath = os.path.join(self.working_dir, self.save_folder)
         self.closeproj = False
-        self.savefile = False
-        self.goback = False
         self.uploadfile = False
         self.saveUI = QWidget()
         self.savefile_inputfield = QLineEdit()
@@ -93,31 +94,27 @@ class CircuitBuilderWindow(QMainWindow):
         self.savewarningtext = QLabel()
         self.savewarningtext.setStyleSheet("color: red;")
         save_button = QPushButton("SAVE")
-        save_button.clicked.connect(self.to_save)
+        save_button.clicked.connect(lambda:self.save_file(True)) #call savefile
         back_button = QPushButton("BACK")
-        back_button.clicked.connect(self.go_back)
-
+        back_button.clicked.connect(lambda:self.save_file(False)) #call savefile
         #Save UI Layout
         save_layout = QHBoxLayout(self.saveUI)
         save_layout.addWidget(self.savefile_inputfield)
         save_layout.addWidget(self.savewarningtext)
         save_layout.addWidget(save_button)
         save_layout.addWidget(back_button)
-
+        #Hide & Disable SaveUI widget
         self.saveUI.hide()
         self.saveUI.setEnabled(False)
-
-        self.working_dir = os.getcwd()
-        self.save_folder = r"saves"
-        self.save_folderpath = os.path.join(self.working_dir, self.save_folder)
 
         #Save Confirm UI
         self.saveconfirmtext = QLabel()
         self.saveconfirmtext.setStyleSheet("color: black;")
+        #Hide and disable Save Confirm UI
         self.saveconfirmtext.hide()
         self.saveconfirmtext.setEnabled(False)
 
-        #Position Set UI
+        #Set Position UI
         self.position_ui = QWidget()
         self.currentposx = QLabel()
         self.currentposx.setStyleSheet("border: 2px solid black;")
@@ -129,14 +126,11 @@ class CircuitBuilderWindow(QMainWindow):
         self.posoffset_y_in.setPlaceholderText("Enter offset from current position in y axis")
         self.posoffsetvaliditytext = QLabel()
         self.posoffsetvaliditytext.setStyleSheet("color: red;")
-        self.last_validator_scales = (None,None)
-
-        self.previewposbutton = QPushButton("Preview Position")
+        self.previewposbutton = QPushButton("Set Position")
         self.previewposbutton.clicked.connect(self.apply_position_change)
-
-        self.setposbutton = QPushButton("Set Position")
+        self.setposbutton = QPushButton("Back")
         self.setposbutton.clicked.connect(self.submitpos)
-
+        #Set Position UI Layout
         pos_ui_layout = QHBoxLayout(self.position_ui)
         pos_ui_layout.addWidget(self.currentposx)
         pos_ui_layout.addWidget(self.currentposy)
@@ -147,13 +141,14 @@ class CircuitBuilderWindow(QMainWindow):
         pos_ui_layout.addWidget(self.posoffsetvaliditytext)
         pos_ui_layout.addWidget(self.previewposbutton)
         pos_ui_layout.addWidget(self.setposbutton)
-
+        #Disable and hide set position UI
         self.position_ui.hide()
         self.position_ui.setEnabled(False)
 
         #Confirm selection UI
-        self.selectedtext = QLabel("Select objects before pressing M")
+        self.selectedtext = QLabel("Select objects before pressing M to move")
         self.selectedtext.setStyleSheet("color: red;")
+        #Disable and hide confirm selection UI
         self.selectedtext.hide()
         self.selectedtext.setEnabled(False)
 
@@ -169,7 +164,6 @@ class CircuitBuilderWindow(QMainWindow):
         layout.addWidget(self.saveconfirmtext, alignment = Qt.AlignTop)
         layout.addWidget(self.position_ui, alignment = Qt.AlignTop)
         layout.addWidget(self.selectedtext, alignment = Qt.AlignTop)
-
         layout.addWidget(self.viewer, stretch = 1)
 
         #Full Window UI
@@ -185,16 +179,18 @@ class CircuitBuilderWindow(QMainWindow):
         self.stockdimensionsui.setEnabled(False) #disable stock dimensions UI
         self.header.show() #unhide header
         self.header.setEnabled(True) #make header interactable
-        with open(path, "r") as f:
+        with open(path, "r") as f: #Load and read file
             data = json.load(f)
 
-        for component in data['componentdata']:
-            if component['modelName'] == "stock":
-                self.viewer.stock_available(component['dimX'], component['dimY'], component['dimZ'])
-                self.stock_model_data = component
-            else:
-                self.viewer.load_model(component['modelName'])
-                for model in self.viewer.loadedmodels:
+        for component in data['componentdata']: #Go through each component
+            if component['modelName'] == "stock": #If component is stock
+                self.viewer.stock_available(component['dimX'], component['dimY'], component['dimZ']) #Call stock_available function with its dimensions
+                self.stock_model_data = component #Save stock data locally
+            else: #If not stock
+                self.viewer.load_model(component['modelName']) #Load model using the .obj path stored in 'modelName'
+
+                #Can optimize this
+                for model in self.viewer.loadedmodels: #Go through each loaded model
                     if model['name'] == component['modelName']:
                         transformed_meshes = []
                         for mesh in model['meshes']:
@@ -214,154 +210,36 @@ class CircuitBuilderWindow(QMainWindow):
                             transformed_meshes.append(mesh)
                         model['meshes'] = transformed_meshes
                         model['rotation'] = [0,0,component['rotZ']]
+                        break
+                #Till here
 
-        self.viewer.wiredata = data['wiresdata']
-        for wire in data['wiresdata']:
-            for nodedata in wire['wireNodesdata']:
-                self.viewer.wirenodesdata.append(nodedata)
+        self.viewer.wiredata = data['wiresdata'] #Load wire data from the file
+        for wire in data['wiresdata']: #For each wire
+            for nodedata in wire['wireNodesdata']: #For each node in wire
+                self.viewer.wirenodesdata.append(nodedata) #Add to wire node data for drawing
 
-        self.viewer.stockdrawn = True
-        self.viewer.update()
-
-    def go_home(self): #On home button click
-        from main import HomeWindow
-        self.homewindow = HomeWindow()
-        self.close()
-
-    def to_close(self):
-        self.closeproj = True
-        self.header.hide()
-        self.header.setEnabled(False)
-        self.saveUI.show()
-        self.saveUI.setEnabled(True)
-
-    def to_save(self):
-        self.savefile = True
-        self.save_file()
-
-    def go_back(self):
-        self.goback = True
-        self.save_file()
-
-    def save_file(self):
-        f3ds_folder = r"assets\f3ds"
-        full_f3d_folder = os.path.join(self.working_dir, f3ds_folder)
-        os.makedirs(self.save_folderpath, exist_ok=True)
-
-        save_data = {'componentdata': [], 'wiresdata': []}
-
-        if not self.goback and self.savefile:
-            self.components.clear()
-            self.savefile = False
-            if (self.savefile_inputfield.text() == ""):
-                self.savewarningtext.setText("ENTER FILENAME")
-            else:
-                currentdatetime = datetime.datetime.now().strftime("%m-%d-%Y-%H%M%S")
-                savefilename = self.savefile_inputfield.text() + f"-{currentdatetime}.json"
-                savefilepath = os.path.join(self.save_folderpath, savefilename)
-                self.savewarningtext.setText("")
-                self.components.append(self.stock_model_data)
-                for model in self.viewer.loadedmodels:
-                    f3dpath = os.path.splitext(os.path.basename(model['name']))[0] + ".f3d"
-                    fullf3dpath = os.path.join(full_f3d_folder, f3dpath)
-                    self.components.append({'modelName': model['name'], 'f3dName': fullf3dpath,
-                                                'posX':model['position'][0], 'posY':model['position'][1],
-                                                'dimX': 0, 'dimY': 0, 'dimZ': 0,
-                                                'rotX': model['rotation'][0], 'rotY': model['rotation'][1], 'rotZ': model['rotation'][2]})
-
-
-                save_data['componentdata'] = self.components
-                save_data['wiresdata'] = self.viewer.wiredata
-
-                with open(savefilepath, "w") as f:
-                    json.dump(save_data, f, indent=4)
-
-                self.saveUI.hide()
-                self.saveUI.setEnabled(False)
-                self.header.hide()
-                self.header.setEnabled(False)
-                self.saveconfirmtext.show()
-                self.saveconfirmtext.setEnabled(True)
-                self.saveconfirmtext.setText(f"SAVED TO: {savefilepath}")
-                QTimer.singleShot(2000, self.delay)
-
-        elif self.goback:
-            self.saveUI.hide()
-            self.saveUI.setEnabled(False)
-            self.header.show()
-            self.header.setEnabled(True)
-            self.goback = False
-            self.savefile = False
-            self.closeproj = False
-            self.savewarningtext.setText("")
-            if self.dropdown.findText("MENU") != -1:
-                    self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
-
-
-    def delay(self):
-        self.saveconfirmtext.setText("")
-        self.saveconfirmtext.hide()
-        self.saveconfirmtext.setEnabled(False)
-
-        if self.uploadfile:
-            fusion_path = r"C:\Users\dwara\AppData\Local\Autodesk\webdeploy\production\6a0c9611291d45bb9226980209917c3d\FusionLauncher.exe"
-            if os.path.exists(fusion_path):
-                subprocess.Popen([fusion_path])
-            else:
-                print("Fusion doesn't exist in path")
-            self.uploadfile = False
-
-        if self.closeproj:
-            self.closeproj = False
-            self.go_home()
-
-        if self.dropdown.findText("MENU") != -1:
-            self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
-
-    def on_dropdown_changed(self,text): #On dropdown option selected
-        if text == "ADD":
-            self.load_component()
-        elif text == "SAVE":
-            self.header.hide()
-            self.header.setEnabled(False)
-            self.position_ui.hide()
-            self.position_ui.setEnabled(False)
-            self.saveUI.show()
-            self.saveUI.setEnabled(True)
-        elif text == "UPLOAD":
-            self.uploadfile = True
-            self.header.hide()
-            self.header.setEnabled(False)
-            self.position_ui.hide()
-            self.position_ui.setEnabled(False)
-            self.saveUI.show()
-            self.saveUI.setEnabled(True)
-        elif text == "MENU":
-            self.saveUI.hide()
-            self.saveUI.setEnabled(False)
-            self.position_ui.hide()
-            self.position_ui.setEnabled(False)
-            self.header.show()
-            self.header.setEnabled(True)
+        self.viewer.stockdrawn = True #Stock is drawn
+        self.update_offset_validators() #Update validators
+        self.viewer.update() #Refresh the Viewer to show changes
 
     def update_stock_dims(self): #On inputfield/stock dimensions values changed
         self.warningstockdimuitext.setText("")
-        try:
+        try:#get length
             length = float(self.length_input.text())
         except ValueError:
             length = 1.0
 
-        try:
+        try:#get width
             width = float(self.width_input.text())
         except ValueError:
             width = 1.0
 
-        try:
+        try:#get height
             height = float(self.height_input.text())
         except ValueError:
             height = 1.0
 
-        self.viewer.stock_available(length, width, height)
+        self.viewer.stock_available(length, width, height) #draw stock
 
     def generate_stock(self): #On submit button clicked to submit stock dimensions
         if(self.length_input.text() != "" and self.width_input.text() != "" and self.height_input.text() != ""): #check if all dimensions entered
@@ -375,75 +253,118 @@ class CircuitBuilderWindow(QMainWindow):
                                             'posX': -float(self.length_input.text())/2, 'posY': -float(self.width_input.text())/2,
                                             'dimX': float(self.length_input.text()), 'dimY': float(self.width_input.text()), 'dimZ': float(self.height_input.text()),
                                             'rotX': 0.0, 'rotY': 0.0, 'rotZ': 0.0})
-            self.stock_model_data = self.components[0]
-            self.viewer.stockdrawn = True
-            self.update_offset_validators()
+            self.stock_model_data = self.components[0] #save stock data locally
+            self.viewer.stockdrawn = True #set stock to drawn
+            self.update_offset_validators() #update validators
         else:
-           self.warningstockdimuitext.setText("ENTER ALL DIMENSIONS")
+           self.warningstockdimuitext.setText("ENTER ALL DIMENSIONS") #Notify user to enter all dimensions
 
-    def load_component(self): #load component
-        menu = Selection(self)
-        if menu.exec_() == QDialog.Accepted:
+    def update_offset_validators(self): #Update the validators
+        self.posoffset_x_in.setValidator(QDoubleValidator(-self.stock_model_data['dimX'], self.stock_model_data['dimX'], 4)) #allows user to enter offset between -length to length of stock
+        self.posoffset_y_in.setValidator(QDoubleValidator(-self.stock_model_data['dimY'], self.stock_model_data['dimY'], 4)) #allows user to enter offset between -width to width of stock
+
+    def on_dropdown_changed(self,text): #On dropdown option selected
+        if text == "ADD": #if option ADD selected
+            self.load_component()
+        elif text == "SAVE": #if option SAVE selected
+            self.header.hide()
+            self.header.setEnabled(False)
+            self.position_ui.hide()
+            self.position_ui.setEnabled(False)
+            self.saveUI.show()
+            self.saveUI.setEnabled(True)
+        elif text == "UPLOAD": #if option UPLOAD selected
+            self.uploadfile = True
+            self.header.hide()
+            self.header.setEnabled(False)
+            self.position_ui.hide()
+            self.position_ui.setEnabled(False)
+            self.saveUI.show()
+            self.saveUI.setEnabled(True)
+        elif text == "MENU": #if option MENU selected
+            self.saveUI.hide()
+            self.saveUI.setEnabled(False)
+            self.position_ui.hide()
+            self.position_ui.setEnabled(False)
+            self.header.show()
+            self.header.setEnabled(True)
+
+    def go_home(self): #On home button click
+        from main import HomeWindow
+        self.homewindow = HomeWindow()
+        self.close()
+
+    def to_close(self): #On close button click
+        self.closeproj = True
+        self.header.hide()
+        self.header.setEnabled(False)
+        self.saveUI.show()
+        self.saveUI.setEnabled(True)
+
+    def load_component(self): #loads component
+        menu = Selection(self) #Opens dialog box to display all components present
+        if menu.exec_() == QDialog.Accepted:#if the component has been selected
             print(self.selectedobjpath)
-            self.viewer.load_model(self.selectedobjpath)
-            if self.dropdown.findText("MENU") != -1:
+            self.viewer.load_model(self.selectedobjpath) #load model in path
+            if self.dropdown.findText("MENU") != -1: #switch to MENU option
                 self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_M and self.viewer.stockdrawn:
+        if event.key() == Qt.Key_M and self.viewer.stockdrawn: #if M pressed and stock drawn
             self.header.hide()
             self.header.setEnabled(False)
             self.saveUI.hide()
             self.saveUI.setEnabled(False)
-            position = self.get_selected_position()
-            if position == None:
+            position = self.get_selected_position() #get current position of the latest selected object/model
+            if position == None: #if none - then nothing selected
                 self.position_ui.hide()
                 self.position_ui.setEnabled(False)
-                self.selectedtext.show()
+                self.selectedtext.show() #Warn user to select component
                 self.selectedtext.setEnabled(True)
-                QTimer.singleShot(1000, self.submitpos)
-            else:
+                QTimer.singleShot(1000, self.submitpos) #Return to default window
+            else: #if position is not none - show position UI
                 self.selectedtext.hide()
                 self.selectedtext.setEnabled(False)
                 self.position_ui.show()
                 self.position_ui.setEnabled(True)
 
     def get_selected_position(self):
-        if self.viewer.selected_model_indices:
+        if self.viewer.selected_model_indices: #if model seleceted
+            #get current position
             xpos = self.viewer.loadedmodels[self.viewer.selected_model_indices[-1]]['position'][0]
             ypos = self.viewer.loadedmodels[self.viewer.selected_model_indices[-1]]['position'][1]
-            self.currentposx.setText(f"Current X Position: {str(xpos)}")
-            self.currentposy.setText(f"Current Y Position: {str(ypos)}")
+            #display current position to 4 decimal points
+            self.currentposx.setText(f"Current X Position: {xpos:.4f}")
+            self.currentposy.setText(f"Current Y Position: {ypos:.4f}")
             return [xpos,ypos]
-        elif self.viewer.selected_node_indices:
+        elif self.viewer.selected_node_indices: #if wire node selected
+            #get current position
             xpos = self.viewer.wirenodesdata[self.viewer.selected_node_indices[-1]]['posX']
             ypos = self.viewer.wirenodesdata[self.viewer.selected_node_indices[-1]]['posY']
-            self.currentposx.setText(f"Current X Position: {str(xpos)}")
-            self.currentposy.setText(f"Current Y Position: {str(ypos)}")
+            #display current position to 4 decimal points
+            self.currentposx.setText(f"Current X Position: {xpos:.4f}")
+            self.currentposy.setText(f"Current Y Position: {ypos:.4f}")
             return [xpos,ypos]
         return None
 
-    def update_offset_validators(self):
-        self.posoffset_x_in.setValidator(QDoubleValidator(-self.stock_model_data['dimX'], self.stock_model_data['dimX'], 2))
-        self.posoffset_y_in.setValidator(QDoubleValidator(-self.stock_model_data['dimY'], self.stock_model_data['dimY'], 2))
-
-    def apply_position_change(self):
+    def apply_position_change(self):#sets position
+        #check if entered value is valid
         if self.posoffset_x_in.validator().validate(self.posoffset_x_in.text(), 0)[0] != QValidator.Acceptable or self.posoffset_y_in.validator().validate(self.posoffset_y_in.text(), 0)[0] != QValidator.Acceptable:
             self.posoffsetvaliditytext.setText("Enter valid offset")
         else:
             self.posoffsetvaliditytext.setText("")
-            try:
+            try:#get x and y offset
                 xoff = float(self.posoffset_x_in.text())
                 yoff = -float(self.posoffset_y_in.text())
-            except:
+            except:#if error, set x and y offset to zero
                 xoff = 0.0
                 yoff = 0.0
                 self.posoffsetvaliditytext.setText("Offset parse error")
 
-            self.viewer.selected_position(xoff,yoff)
-            self.get_selected_position()
+            self.viewer.selected_position(xoff,yoff) #set position
+            self.get_selected_position()#get the new position
 
-    def submitpos(self):
+    def submitpos(self):#return to default window
         self.selectedtext.hide()
         self.selectedtext.setEnabled(False)
         self.position_ui.hide()
@@ -460,6 +381,79 @@ class CircuitBuilderWindow(QMainWindow):
         if self.viewer.selected_node_indices: # and not self.viewer.multiselect:
             self.viewer.selected_node_indices.clear()
             self.viewer.update()
+
+    def save_file(self, savefile): #On save or back button clicked
+        if savefile: #If save button clicked
+            f3ds_folder = r"assets\f3ds"
+            full_f3d_folder = os.path.join(self.working_dir, f3ds_folder) #Get full fed path
+            os.makedirs(self.save_folderpath, exist_ok=True) #Create a save directory if it doesnt exist
+            save_data = {'componentdata': [], 'wiresdata': []} #Create empty directory for saving
+
+            self.components.clear() #Clear component list to avoid previous save appending onto previous saves
+            savefile = False #set save file to false
+            if (self.savefile_inputfield.text() == ""): #Check if filename valid
+                self.savewarningtext.setText("ENTER FILENAME")
+            else: #If valid
+                currentdatetime = datetime.datetime.now().strftime("%m-%d-%Y-%H%M%S") #get current date and time
+                savefilename = self.savefile_inputfield.text() + f"-{currentdatetime}.json" #generate filename
+                savefilepath = os.path.join(self.save_folderpath, savefilename) #concatenate to get file path
+                self.savewarningtext.setText("") #set warning text to null
+                self.components.append(self.stock_model_data) #add stock data
+                for model in self.viewer.loadedmodels:#go through each loaded model
+                    f3dpath = os.path.splitext(os.path.basename(model['name']))[0] + ".f3d"
+                    fullf3dpath = os.path.join(full_f3d_folder, f3dpath) #get f3d path
+                    #populate component list with dictionary as below
+                    self.components.append({'modelName': model['name'], 'f3dName': fullf3dpath, #obj path, f3d path
+                                                'posX':model['position'][0], 'posY':model['position'][1], #x,y position relative to origin
+                                                'dimX': 0, 'dimY': 0, 'dimZ': 0, #dimensions
+                                                'rotX': model['rotation'][0], 'rotY': model['rotation'][1], 'rotZ': model['rotation'][2]}) #rotation relative to center of model
+
+                #load the data into save_data to save in .json file
+                save_data['componentdata'] = self.components
+                save_data['wiresdata'] = self.viewer.wiredata
+
+                with open(savefilepath, "w") as f: #open .json file in file path generated previously
+                    json.dump(save_data, f, indent=4) #save in json file
+
+                self.saveUI.hide()
+                self.saveUI.setEnabled(False)
+                self.header.hide()
+                self.header.setEnabled(False)
+                #tell user the location of file/project
+                self.saveconfirmtext.show()
+                self.saveconfirmtext.setEnabled(True)
+                self.saveconfirmtext.setText(f"SAVED TO: {savefilepath}")
+                QTimer.singleShot(2000, self.delay) #call delay
+        else:
+            self.saveUI.hide()
+            self.saveUI.setEnabled(False)
+            self.header.show()
+            self.header.setEnabled(True)
+            self.closeproj = False
+            self.savewarningtext.setText("")
+            if self.dropdown.findText("MENU") != -1:
+                    self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
+
+    def delay(self):
+        #remove notification to user
+        self.saveconfirmtext.setText("")
+        self.saveconfirmtext.hide()
+        self.saveconfirmtext.setEnabled(False)
+
+        if self.dropdown.findText("MENU") != -1:#return to default screen
+            self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
+
+        if self.uploadfile: #if upload pressed
+            fusion_path = r"C:\Users\dwara\AppData\Local\Autodesk\webdeploy\production\6a0c9611291d45bb9226980209917c3d\FusionLauncher.exe"
+            if os.path.exists(fusion_path): #if fusion 360 exists
+                subprocess.Popen([fusion_path]) #launch fusion 360
+            else:
+                print("Fusion doesn't exist in path") #else print
+            self.uploadfile = False #upload flag set to false
+
+        if self.closeproj: #if close button clicked
+            self.closeproj = False #set close flag to false
+            self.go_home() #return to home screen
 
 class Selection(QDialog): #Load component menu - shows sall available components for selection
     def __init__(self, parent = None):
