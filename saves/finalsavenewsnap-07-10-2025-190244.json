@@ -1,0 +1,146 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -2.5,
+            "posY": -1.5,
+            "dimX": 5.0,
+            "dimY": 3.0,
+            "dimZ": 2.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\battery.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\battery.f3d",
+            "posX": -2.515,
+            "posY": -1.3527,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\button.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\button.f3d",
+            "posX": -0.6212,
+            "posY": -0.6212,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\LED.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\LED.f3d",
+            "posX": -0.6212,
+            "posY": -2.5701,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 270
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\microcontroller.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\microcontroller.f3d",
+            "posX": -4.2785,
+            "posY": -1.4679,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 180
+        }
+    ],
+    "wiresdata": [
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -2.1213,
+                    "posY": -1.3527
+                },
+                {
+                    "posX": -2.1213,
+                    "posY": -1.3527
+                },
+                {
+                    "posX": -0.6212,
+                    "posY": -1.3527
+                },
+                {
+                    "posX": -0.6212,
+                    "posY": -0.9992
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -2.515,
+                    "posY": -1.3527
+                },
+                {
+                    "posX": -3.6212,
+                    "posY": -1.3527
+                },
+                {
+                    "posX": -3.6212,
+                    "posY": -2.4323
+                },
+                {
+                    "posX": -0.6212,
+                    "posY": -2.4323
+                }
+            ],
+            "pole": "n"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -4.5185,
+                    "posY": -1.1979
+                },
+                {
+                    "posX": -4.5185,
+                    "posY": -0.2432
+                },
+                {
+                    "posX": -0.6212,
+                    "posY": -0.2432
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -4.5035,
+                    "posY": -1.8429
+                },
+                {
+                    "posX": -4.5035,
+                    "posY": -1.8429
+                },
+                {
+                    "posX": -4.5185,
+                    "posY": -2.7079
+                },
+                {
+                    "posX": -0.6212,
+                    "posY": -2.7079
+                }
+            ],
+            "pole": "p"
+        }
+    ]
+}

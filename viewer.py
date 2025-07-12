@@ -5,7 +5,7 @@ from PyQt5.QtGui import QMouseEvent
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import trimesh
+import trimesh,os
 from trimesh.ray.ray_pyembree import RayMeshIntersector
 import numpy as np
 
@@ -18,10 +18,19 @@ class OpenGLViewer(QOpenGLWidget):
         #Dynamic Resolution
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+        #Component terminals relative to component centre
+        self.component_terminals = {
+            "LED.obj": [(-0.1378,0),(0.1378,0)],
+            "microcontroller.obj": [(-0.225,0.375),(0.225, 0.375),(-0.25,0.225),(0.25,0.225),(-0.25,0.125),(0.25,0.125),(-0.25,0.025),(0.25,0.025),(-0.25,-0.075),(0.25,-0.075),(-0.25,-0.175),(0.25,-0.175),(-0.24,-0.27),(0.24,-0.27)], #top to bottom - (right, left)
+            "button.obj": [(-0.378,0),(0.378,0)],
+            "battery.obj": [(0,0),(0.36,0)] #negative terminal at (0,0)
+        }
         #Component Loading
         self.stock = None #stock variable
+        self.model_id = 0
         self.loadedmodels = [] #Loaded models
 
+        self.wire_start_terminal = None
         self.wirenodesdata = [] #Wire Nodes data for saving
         self.wiredata = [] #Wire data for saving
         self.start = 0
@@ -40,7 +49,7 @@ class OpenGLViewer(QOpenGLWidget):
         self.posycam = (0,1,0)
 
         #MultiSelect Feature
-        # self.multiselect = False
+        self.multiselect = False
         #Draw Wire Node Feature
         self.drawwirenode = False
 
@@ -87,6 +96,14 @@ class OpenGLViewer(QOpenGLWidget):
                 self.draw_model(mesh,i)
             glPopMatrix()
 
+            glPointSize(10 / self.scaley)
+            glBegin(GL_POINTS)
+            glColor3f(0.0,1.0,0.0)
+            terminals = obj_data['permodel_terminals']
+            for x,y in terminals:
+                glVertex3f(x, y, 2.0)
+            glEnd()
+
         for i, nodedata in enumerate(self.wirenodesdata):
             self.draw_wirenodes(i,nodedata)
 
@@ -107,11 +124,11 @@ class OpenGLViewer(QOpenGLWidget):
 
         self.orient_camera()
 
-    def selected_position(self,dx,dy):
+    def move_selected_to_position(self,dx,dy):
         if self.selected_model_indices:
             for index in self.selected_model_indices:
-                self.loadedmodels[index]['position'][0] += dx
-                self.loadedmodels[index]['position'][1] -= dy
+                self.loadedmodels[index]['position'][0] = round(self.loadedmodels[index]['position'][0] + dx,4)
+                self.loadedmodels[index]['position'][1] = round(self.loadedmodels[index]['position'][1] - dy,4)
 
                 transformed_meshes = []
                 for mesh in self.loadedmodels[index]['meshes']:
@@ -119,13 +136,17 @@ class OpenGLViewer(QOpenGLWidget):
                     transformed_meshes.append(mesh)
                 self.loadedmodels[index]['meshes'] = transformed_meshes
 
-        if self.selected_node_indices: #check if any node selected
-             for selected_node_index in self.selected_node_indices:
-                # Update position
-                self.wirenodesdata[selected_node_index]['posX'] += dx
-                self.wirenodesdata[selected_node_index]['posY'] -= dy
-
-        if self.selected_model_indices or self.selected_node_indices:
+                terminals = self.loadedmodels[index]['permodel_terminals']
+                for wirenodedata in self.wirenodesdata:
+                    if self.loadedmodels[index]['id'] == wirenodedata['componentid']:
+                        wirenodedata['posX'] = round(wirenodedata['posX'] + dx,4)
+                        wirenodedata['posY'] = round(wirenodedata['posY'] - dy,4)
+                translated_terminals= []
+                for x,y in terminals:
+                    worldx = round(x + dx,4)
+                    worldy = round(y - dy,4)
+                    translated_terminals.append((worldx,worldy))
+                self.loadedmodels[index]['permodel_terminals'] = translated_terminals
             self.update()
 
     def draw_model(self, mesh, i):
@@ -167,8 +188,14 @@ class OpenGLViewer(QOpenGLWidget):
         else:
             meshes.append(sceneormesh) #if mesh, add mesh
 
-        model_entry = {'name': path,'meshes': meshes, 'position': [0,0,1], 'rotation': [0,0,0]}
+        name = os.path.basename(path)
+        if name in self.component_terminals:
+            terminals = []
+            for x,y in self.component_terminals[name]:
+                terminals.append((round(x,4),round(y,4)))
+        model_entry = {'id': self.model_id, 'name': path,'meshes': meshes, 'position': [0,0,1], 'rotation': [0,0,0],'permodel_terminals':terminals}
         self.loadedmodels.append(model_entry) #append meshes to loadedmodels
+        self.model_id += 1
         self.update() #Calls paintGL function
 
     def stock_available(self, length, width, height):
@@ -179,6 +206,9 @@ class OpenGLViewer(QOpenGLWidget):
         glPushMatrix()
         glColor3f(1.0, 1.0, 1.0) #colour of stock = white
         #define vertices
+        l = round(l,4)
+        w = round(w,4)
+        h = round(h,4)
         vertices = [
             [-l, 0, 0],
             [0, 0, 0],
@@ -195,18 +225,18 @@ class OpenGLViewer(QOpenGLWidget):
 
     def center_and_zoom_camera_on_stock(self, l, w, margin_factor=1.01):
         # Center camera
-        center_x = -l / 2
-        center_y = -w / 2
+        center_x = round(-l / 2,4)
+        center_y = round(-w / 2,4)
 
         # Use max dimension to determine scale
-        max_dim = max(l, w)
+        max_dim = round(max(l, w),4)
 
         # Adjust scaley (which sets vertical extent in ortho projection)
-        self.scaley = (max_dim / 2) * margin_factor  # add a margin for visibility
+        self.scaley = round((max_dim / 2) * margin_factor,4)  # add a margin for visibility
 
         # Set scalex based on aspect ratio (done in set_projection)
         aspect = self.width() / self.height() if self.height() != 0 else 1.0
-        self.scalex = self.scaley * aspect
+        self.scalex = round(self.scaley * aspect,4)
 
         # Adjust camera position
         self.camera_pos = (center_x, center_y, max_dim * margin_factor)
@@ -215,9 +245,9 @@ class OpenGLViewer(QOpenGLWidget):
         self.update()
 
     def draw_wirenodes(self, i, nodedata):
-        self.radius = 0.0075 * self.scaley #Wire node radius
+        self.radius = round(0.0075 * self.scaley,4) #Wire node radius
         if i in self.selected_node_indices:
-            glColor3f(1.0,0.5,0.2)
+            glColor3f(0.0,0.0,1.0)
         else:
             glColor3f(1.0, 0.0, 0.0)
 
@@ -228,7 +258,7 @@ class OpenGLViewer(QOpenGLWidget):
             theta = 2.0 * np.pi * i / 64
             x = self.radius * np.cos(theta) + nodedata['posX']
             y = self.radius * np.sin(theta) + nodedata['posY']
-            glVertex3f(x,y,2.0)
+            glVertex3f(round(x,4),round(y,4),2.0)
         glEnd()
 
     def mousePressEvent(self, event): #when mouse pressed
@@ -236,6 +266,21 @@ class OpenGLViewer(QOpenGLWidget):
             hitornot = []
             self.last_mouse_pos = event.pos() #get position of mouse on press time
             ray_origin, ray_direction = self.screen_to_ray(event.x(), event.y()) #get raycast of mous ein that position
+
+            for i, nodedata in enumerate(self.wirenodesdata):
+                node_center = np.array([nodedata['posX'], nodedata['posY']])
+                if np.linalg.norm(ray_origin[:2] - node_center) <= self.radius:
+                    hitornot.append(True)
+                    if i not in self.selected_node_indices:
+                        self.selected_node_indices.append(i)
+                    else:
+                        self.selected_node_indices.remove(i)
+                    self.update()
+                    return
+                    # if not self.multiselect:
+                    #     break
+                else:
+                    hitornot.append(False)
 
             for i, model in enumerate(self.loadedmodels):
                 raycast_mesh = trimesh.util.concatenate(model['meshes'])
@@ -258,20 +303,6 @@ class OpenGLViewer(QOpenGLWidget):
                 else:
                     hitornot.append(False)
 
-            for i, nodedata in enumerate(self.wirenodesdata):
-                node_center = np.array([nodedata['posX'], nodedata['posY']])
-                if np.linalg.norm(ray_origin[:2] - node_center) <= self.radius:
-                    hitornot.append(True)
-                    if i not in self.selected_node_indices:
-                        self.selected_node_indices.append(i)
-                    else:
-                        self.selected_node_indices.remove(i)
-                    self.update()
-                    # if not self.multiselect:
-                    #     break
-                else:
-                    hitornot.append(False)
-
             if True in hitornot:
                 self.update()
             else:
@@ -281,11 +312,44 @@ class OpenGLViewer(QOpenGLWidget):
 
         else:
             centre, _ = self.screen_to_ray(event.x(), event.y())
-            self.wirenodesdata.append({'posX': centre[0], 'posY': centre[1]})
-            self.update()
+            clicked_terminal = None
+            clicked_key = None
+            clicked_id = None
+            min_dist = float('inf')
+            threshold = 0.1 * self.scaley
+            for model in self.loadedmodels:
+                for tx,ty in model['permodel_terminals']:
+                    dist = np.hypot(centre[0] - tx, centre[1] - ty)
+                    if dist < min_dist and dist <= threshold:
+                        clicked_terminal = (round(tx, 4), round(ty, 4))
+                        clicked_id = model['id']
+                        clicked_key = os.path.splitext(os.path.basename(model['name']))[0]
+                        min_dist = dist
+
+            if clicked_terminal:
+                if self.wire_start_terminal is None:
+                    self.wire_start_terminal = (clicked_terminal, clicked_id, clicked_key)
+                    self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1], 'component': clicked_key, 'componentid': clicked_id})
+                else:
+                    (terminal, id, _) = self.wire_start_terminal
+                    if id == clicked_id:
+                        print("Error")
+                    else:
+                        if terminal[0] == clicked_terminal[0] or terminal[1] == clicked_terminal[1]:
+                            pass
+                        elif abs(terminal[0] - clicked_terminal[0]) > abs(terminal[1] - clicked_terminal[1]):
+                            self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None})
+                        else:
+                            self.wirenodesdata.append({'posX': terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None})
+                            self.wirenodesdata.append({'posX': clicked_terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None})
+                        self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id})
+                        self.wire_start_terminal = None
+                        self.update()
+            else:
+                print("Click closer to terminal")
 
 
-    # def mouseMoveEvent(self, event): #when mouse dragged
+    def mouseMoveEvent(self, event): #when mouse dragged
     #     if self.selected_model_indices: #check if any model selected
     #         dx = event.x() - self.last_mouse_pos.x()
     #         dy = event.y() - self.last_mouse_pos.y()
@@ -307,32 +371,32 @@ class OpenGLViewer(QOpenGLWidget):
     #             self.loadedmodels[selected_model_index]['meshes'] = transformed_meshes
     #             self.loadedmodels[selected_model_index]['position'] = selectedmodel['position']
 
-    #     if self.selected_node_indices: #check if any node selected
-    #         dx = event.x() - self.last_mouse_pos.x()
-    #         dy = event.y() - self.last_mouse_pos.y()
+        if self.selected_node_indices: #check if any node selected
+            dx = event.x() - self.last_mouse_pos.x()
+            dy = event.y() - self.last_mouse_pos.y()
 
-    #         # Convert pixel movement to world coordinates (approximate)
-    #         dx_world = dx * (2 * self.scalex / self.width())
-    #         dy_world = dy * (2 * self.scaley / self.height())
+            # Convert pixel movement to world coordinates (approximate)
+            dx_world = dx * (2 * self.scalex / self.width())
+            dy_world = dy * (2 * self.scaley / self.height())
 
-    #         for selected_node_index in self.selected_node_indices:
-    #             # Update position
-    #             self.wirenodesdata[selected_node_index]['posX'] += dx_world
-    #             self.wirenodesdata[selected_node_index]['posY'] -= dy_world
+            for selected_node_index in self.selected_node_indices:
+                # Update position
+                self.wirenodesdata[selected_node_index]['posX'] = round(self.wirenodesdata[selected_node_index]['posX'] + dx_world,4)
+                self.wirenodesdata[selected_node_index]['posY'] = round(self.wirenodesdata[selected_node_index]['posY'] - dy_world,4)
 
-    #     if self.selected_model_indices or self.selected_node_indices:
-    #         self.last_mouse_pos = event.pos()
-    #         self.update()
-    #     else:
-    #         self.update()
+        if self.selected_node_indices: #self.selected_model_indices or
+            self.last_mouse_pos = event.pos()
+            self.update()
+        else:
+            self.update()
 
-    # def mouseReleaseEvent(self, event):
-    #     if self.selected_model_indices and not self.multiselect:
-    #         self.selected_model_indices.clear()
-    #         self.update()
-    #     if self.selected_node_indices and not self.multiselect:
-    #         self.selected_node_indices.clear()
-    #         self.update()
+    def mouseReleaseEvent(self, event):
+        # if self.selected_model_indices and not self.multiselect:
+        #     self.selected_model_indices.clear()
+        #     self.update()
+        if self.selected_node_indices and not self.multiselect:
+            self.selected_node_indices.clear()
+            self.update()
 
     def screen_to_ray(self, x, y):
         # Convert screen coordinates to normalized device coordinates [-1, 1]
@@ -369,6 +433,40 @@ class OpenGLViewer(QOpenGLWidget):
             if self.loadedmodels[i]['rotation'][2] >= 360:
                 self.loadedmodels[i]['rotation'][2] = 0
             self.loadedmodels[i]['rotation'] = [0,0,self.loadedmodels[i]['rotation'][2] + angle_degrees]
+
+            rotatedterminals = []
+            terminals = self.loadedmodels[i]['permodel_terminals']
+            id = self.loadedmodels[i]['id']
+            cos = np.cos(angle_radians)
+            sin = np.sin(angle_radians)
+
+            if self.wirenodesdata:
+                for index,wirenodedata in enumerate(self.wirenodesdata):
+                    terminal_index = None
+                    if wirenodedata.get('componentid') == id:
+                        for idx,(x,y) in enumerate(terminals):
+                            if abs(x - wirenodedata['posX']) < 0.001 and abs(y - wirenodedata['posY']) < 0.001:
+                                terminal_index = idx
+                                break
+                    for x,y in terminals:
+                        local_x = x - self.loadedmodels[i]['position'][0]
+                        local_y = y - self.loadedmodels[i]['position'][1]
+                        rotated_x = round(local_x * cos - local_y * sin + self.loadedmodels[i]['position'][0],4)
+                        rotated_y = round(local_x * sin + local_y * cos + self.loadedmodels[i]['position'][1],4)
+                        rotatedterminals.append((rotated_x,rotated_y))
+                    self.loadedmodels[i]['permodel_terminals'] = rotatedterminals
+                    if terminal_index is not None:
+                        self.wirenodesdata[index]['posX'] = round(rotatedterminals[terminal_index][0],4)
+                        self.wirenodesdata[index]['posY'] = round(rotatedterminals[terminal_index][1],4)
+            else:
+                for x,y in terminals:
+                    local_x = x - self.loadedmodels[i]['position'][0]
+                    local_y = y - self.loadedmodels[i]['position'][1]
+                    rotated_x = round(local_x * cos - local_y * sin + self.loadedmodels[i]['position'][0],4)
+                    rotated_y = round(local_x * sin + local_y * cos + self.loadedmodels[i]['position'][1],4)
+                    rotatedterminals.append((rotated_x,rotated_y))
+                self.loadedmodels[i]['permodel_terminals'] = rotatedterminals
+            # print(f"After Rotation: {self.loadedmodels[i]['permodel_terminals']}")
         self.update()
 
     def delete_selected(self):
@@ -396,12 +494,14 @@ class OpenGLViewer(QOpenGLWidget):
             if not inwire:
                 del self.wirenodesdata[i]
 
+            self.wire_start_terminal = None
+
         self.selected_node_indices.clear()
         self.update()
 
     def keyPressEvent(self, event):
-        # if event.key() == Qt.Key_Shift:
-        #     self.multiselect = True
+        if event.key() == Qt.Key_Shift:
+            self.multiselect = True
 
         if event.key() == Qt.Key_R:
             self.rotate_selected()
@@ -435,8 +535,8 @@ class OpenGLViewer(QOpenGLWidget):
                 print("Not Enough nodes")
 
     def keyReleaseEvent(self, event):
-        # if event.key() == Qt.Key_Shift:
-        #     self.multiselect = False
+        if event.key() == Qt.Key_Shift:
+            self.multiselect = False
 
         if event.key() == Qt.Key_W:
             self.drawwirenode = False

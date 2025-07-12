@@ -192,12 +192,15 @@ class CircuitBuilderWindow(QMainWindow):
                 #Can optimize this
                 for model in self.viewer.loadedmodels: #Go through each loaded model
                     if model['name'] == component['modelName']:
+                        #Translate model to match json
                         transformed_meshes = []
                         for mesh in model['meshes']:
-                            mesh.apply_translation([component['posX'], component['posY'], 0])
+                            mesh.apply_translation([round(component['posX'],4), round(component['posY'],4), 0])
                             transformed_meshes.append(mesh)
                         model['meshes'] = transformed_meshes
-                        model['position'] = [component['posX'], component['posY'], 1]
+                        model['position'] = [round(component['posX'],4), round(component['posY'],4), 1]
+
+                        #Rotate model to match json
                         angle_radians = np.radians(component['rotZ'])
                         rotation_matrix = trimesh.transformations.rotation_matrix(
                             angle_radians,
@@ -210,6 +213,17 @@ class CircuitBuilderWindow(QMainWindow):
                             transformed_meshes.append(mesh)
                         model['meshes'] = transformed_meshes
                         model['rotation'] = [0,0,component['rotZ']]
+
+                        terminals = model['permodel_terminals']
+                        transformed_terminals = []
+                        angle_radians = np.radians(component['rotZ'])
+                        cos = np.cos(angle_radians)
+                        sin = np.sin(angle_radians)
+                        for x,y in terminals:
+                            transformed_x = round(x * cos - y * sin + model['position'][0],4)
+                            transformed_y = round(x * sin + y * cos + model['position'][1],4)
+                            transformed_terminals.append((transformed_x,transformed_y))
+                        model['permodel_terminals'] = transformed_terminals
                         break
                 #Till here
 
@@ -225,17 +239,17 @@ class CircuitBuilderWindow(QMainWindow):
     def update_stock_dims(self): #On inputfield/stock dimensions values changed
         self.warningstockdimuitext.setText("")
         try:#get length
-            length = float(self.length_input.text())
+            length = round(float(self.length_input.text()),4)
         except ValueError:
             length = 1.0
 
         try:#get width
-            width = float(self.width_input.text())
+            width = round(float(self.width_input.text()),4)
         except ValueError:
             width = 1.0
 
         try:#get height
-            height = float(self.height_input.text())
+            height = round(float(self.height_input.text()),4)
         except ValueError:
             height = 1.0
 
@@ -250,8 +264,8 @@ class CircuitBuilderWindow(QMainWindow):
             #Add stock to components data
             if not any(component.get('modelName') == "stock" for component in self.components):
                 self.components.append({'modelName': "stock", 'f3dName': "stock.f3d",
-                                            'posX': -float(self.length_input.text())/2, 'posY': -float(self.width_input.text())/2,
-                                            'dimX': float(self.length_input.text()), 'dimY': float(self.width_input.text()), 'dimZ': float(self.height_input.text()),
+                                            'posX': round(-float(self.length_input.text())/2,4), 'posY': round(-float(self.width_input.text())/2,4),
+                                            'dimX': round(float(self.length_input.text()),4), 'dimY': round(float(self.width_input.text()),4), 'dimZ': round(float(self.height_input.text()),4),
                                             'rotX': 0.0, 'rotY': 0.0, 'rotZ': 0.0})
             self.stock_model_data = self.components[0] #save stock data locally
             self.viewer.stockdrawn = True #set stock to drawn
@@ -354,14 +368,14 @@ class CircuitBuilderWindow(QMainWindow):
         else:
             self.posoffsetvaliditytext.setText("")
             try:#get x and y offset
-                xoff = float(self.posoffset_x_in.text())
-                yoff = -float(self.posoffset_y_in.text())
+                xoff = round(float(self.posoffset_x_in.text()),4)
+                yoff = round(-float(self.posoffset_y_in.text()),4)
             except:#if error, set x and y offset to zero
                 xoff = 0.0
                 yoff = 0.0
                 self.posoffsetvaliditytext.setText("Offset parse error")
 
-            self.viewer.selected_position(xoff,yoff) #set position
+            self.viewer.move_selected_to_position(xoff,yoff) #set position
             self.get_selected_position()#get the new position
 
     def submitpos(self):#return to default window
@@ -404,7 +418,7 @@ class CircuitBuilderWindow(QMainWindow):
                     fullf3dpath = os.path.join(full_f3d_folder, f3dpath) #get f3d path
                     #populate component list with dictionary as below
                     self.components.append({'modelName': model['name'], 'f3dName': fullf3dpath, #obj path, f3d path
-                                                'posX':model['position'][0], 'posY':model['position'][1], #x,y position relative to origin
+                                                'posX':round(model['position'][0],4), 'posY':round(model['position'][1],4), #x,y position relative to origin
                                                 'dimX': 0, 'dimY': 0, 'dimZ': 0, #dimensions
                                                 'rotX': model['rotation'][0], 'rotY': model['rotation'][1], 'rotZ': model['rotation'][2]}) #rotation relative to center of model
 
