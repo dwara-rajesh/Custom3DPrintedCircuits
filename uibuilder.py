@@ -182,6 +182,7 @@ class CircuitBuilderWindow(QMainWindow):
         with open(path, "r") as f: #Load and read file
             data = json.load(f)
 
+        i = 0
         for component in data['componentdata']: #Go through each component
             if component['modelName'] == "stock": #If component is stock
                 self.viewer.stock_available(component['dimX'], component['dimY'], component['dimZ']) #Call stock_available function with its dimensions
@@ -191,7 +192,7 @@ class CircuitBuilderWindow(QMainWindow):
 
                 #Can optimize this
                 for model in self.viewer.loadedmodels: #Go through each loaded model
-                    if model['name'] == component['modelName']:
+                    if model['name'] == component['modelName'] and model['id'] == i:
                         #Translate model to match json
                         transformed_meshes = []
                         for mesh in model['meshes']:
@@ -226,6 +227,7 @@ class CircuitBuilderWindow(QMainWindow):
                         model['permodel_terminals'] = transformed_terminals
                         break
                 #Till here
+                i += 1
 
         self.viewer.wiredata = data['wiresdata'] #Load wire data from the file
         for wire in data['wiresdata']: #For each wire
