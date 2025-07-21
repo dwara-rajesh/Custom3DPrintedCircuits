@@ -121,9 +121,9 @@ class CircuitBuilderWindow(QMainWindow):
         self.currentposy = QLabel()
         self.currentposy.setStyleSheet("border: 2px solid black;")
         self.posoffset_x_in = QLineEdit()
-        self.posoffset_x_in.setPlaceholderText("Enter offset from current position in x axis")
+        self.posoffset_x_in.setPlaceholderText("Enter destination position in x axis")
         self.posoffset_y_in = QLineEdit()
-        self.posoffset_y_in.setPlaceholderText("Enter offset from current position in y axis")
+        self.posoffset_y_in.setPlaceholderText("Enter destination position in y axis")
         self.posoffsetvaliditytext = QLabel()
         self.posoffsetvaliditytext.setStyleSheet("color: red;")
         self.previewposbutton = QPushButton("Set Position")
@@ -134,9 +134,9 @@ class CircuitBuilderWindow(QMainWindow):
         pos_ui_layout = QHBoxLayout(self.position_ui)
         pos_ui_layout.addWidget(self.currentposx)
         pos_ui_layout.addWidget(self.currentposy)
-        pos_ui_layout.addWidget(QLabel("X_offset (in): "))
+        pos_ui_layout.addWidget(QLabel("Destination_X (in): "))
         pos_ui_layout.addWidget(self.posoffset_x_in)
-        pos_ui_layout.addWidget(QLabel("Y_offset (in): "))
+        pos_ui_layout.addWidget(QLabel("Destination_Y (in): "))
         pos_ui_layout.addWidget(self.posoffset_y_in)
         pos_ui_layout.addWidget(self.posoffsetvaliditytext)
         pos_ui_layout.addWidget(self.previewposbutton)
@@ -366,21 +366,26 @@ class CircuitBuilderWindow(QMainWindow):
     def apply_position_change(self):#sets position
         #check if entered value is valid
         if self.posoffset_x_in.validator().validate(self.posoffset_x_in.text(), 0)[0] != QValidator.Acceptable or self.posoffset_y_in.validator().validate(self.posoffset_y_in.text(), 0)[0] != QValidator.Acceptable:
-            self.posoffsetvaliditytext.setText("Enter valid offset")
+            self.posoffsetvaliditytext.setText("Destination position is outside stock dimensions")
         else:
             self.posoffsetvaliditytext.setText("")
+            currpos = self.get_selected_position()
             try:#get x and y offset
-                xoff = round(float(self.posoffset_x_in.text()),4)
-                yoff = round(-float(self.posoffset_y_in.text()),4)
+                xoff = round((float(self.posoffset_x_in.text()) - currpos[0]),4)
+                yoff = round(-(float(self.posoffset_y_in.text()) - currpos[1]),4)
             except:#if error, set x and y offset to zero
                 xoff = 0.0
                 yoff = 0.0
-                self.posoffsetvaliditytext.setText("Offset parse error")
+                self.posoffsetvaliditytext.setText("Position parse error, try again")
 
+            self.posoffset_x_in.clear()
+            self.posoffset_y_in.clear()
             self.viewer.move_selected_to_position(xoff,yoff) #set position
             self.get_selected_position()#get the new position
 
     def submitpos(self):#return to default window
+        self.posoffset_x_in.clear()
+        self.posoffset_y_in.clear()
         self.selectedtext.hide()
         self.selectedtext.setEnabled(False)
         self.position_ui.hide()
@@ -441,6 +446,7 @@ class CircuitBuilderWindow(QMainWindow):
                 self.saveconfirmtext.setText(f"SAVED TO: {savefilepath}")
                 QTimer.singleShot(2000, self.delay) #call delay
         else:
+            self.savefile_inputfield.clear()
             self.saveUI.hide()
             self.saveUI.setEnabled(False)
             self.header.show()
