@@ -554,3 +554,25 @@ class Selection(QDialog): #Load component menu - shows sall available components
         print(f"Selected component: {component}")
         self.parent().selectedobjpath = objfilepath
         self.accept()
+
+class Manual(QDialog):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.setWindowTitle("Manual")
+        self.resize(600,600)
+        rulelayout = QHBoxLayout(self)
+        rules = [
+            "Left Click - Selected Models & Wire Nodes",
+            "Shift + Left Click - Multi-select wire nodes",
+            "R + Left Click - Rotate Selected Models",
+            "M + Left Click - Move Selected Models",
+            "W + Left Click on start and end terminals - Draw Wire Nodes",
+            "Left Click + Drag - Move Wire Nodes",
+            "After drawing nodes - ",
+            "Enter - Draw Positive Wire",
+            "N + Enter - Draw Negative Wire",
+            "Left Click + Delete - Delete Wire Nodes, Wire & Selected Models"
+        ]
+        for rule in rules:
+            rulelabel = QLabel(rule)
+            rulelayout.addWidget(rulelabel)

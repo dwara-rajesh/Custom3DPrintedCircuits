@@ -85,6 +85,18 @@ class OpenGLViewer(QOpenGLWidget):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.orient_camera() #Orient camera
 
+        glLineWidth(10/self.scaley)
+        glBegin(GL_LINES)
+
+        glColor3f(0.0,1.0,0.0)
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.0, 0.1, 0.0)
+
+        glColor3f(1.0,0.0,0.0)
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.1, 0.0, 0.0)
+        glEnd()
+
         if self.stock: #If stock present
             self.load_stock(*self.stock) #load stock
 
