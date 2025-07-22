@@ -10,8 +10,8 @@ from trimesh.ray.ray_pyembree import RayMeshIntersector
 import numpy as np
 
 class OpenGLViewer(QOpenGLWidget):
-    def __init__(self):
-        super(OpenGLViewer, self).__init__()
+    def __init__(self, parent=None):
+        super(OpenGLViewer, self).__init__(parent)
         #Set up widget for key presses
         self.setFocusPolicy(Qt.StrongFocus)
 
@@ -29,6 +29,7 @@ class OpenGLViewer(QOpenGLWidget):
         self.stock = None #stock variable
         self.model_id = 0
         self.loadedmodels = [] #Loaded models
+        self.manualbook = None
 
         self.wire_start_terminal = None
         self.wirenodesdata = [] #Wire Nodes data for saving
@@ -532,6 +533,13 @@ class OpenGLViewer(QOpenGLWidget):
             if parent:
                 parent.keyPressEvent(event)
             return
+
+        if event.key() == Qt.Key_Q:
+            parent = self.parent()
+            if parent:
+                from uibuilder import Manual
+                self.manualbook = Manual(parent)
+                self.manualbook.show()
 
         if event.key() == Qt.Key_Delete:
             self.delete_selected()

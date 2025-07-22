@@ -153,7 +153,7 @@ class CircuitBuilderWindow(QMainWindow):
         self.selectedtext.setEnabled(False)
 
         #WorkSpace UI
-        self.viewer = OpenGLViewer()
+        self.viewer = OpenGLViewer(self)
 
         #Full Window Layout
         layout = QVBoxLayout()
@@ -560,7 +560,7 @@ class Manual(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Manual")
         self.resize(600,600)
-        rulelayout = QHBoxLayout(self)
+        rulelayout = QVBoxLayout(self)
         rules = [
             "Left Click - Selected Models & Wire Nodes",
             "Shift + Left Click - Multi-select wire nodes",
@@ -568,11 +568,15 @@ class Manual(QDialog):
             "M + Left Click - Move Selected Models",
             "W + Left Click on start and end terminals - Draw Wire Nodes",
             "Left Click + Drag - Move Wire Nodes",
-            "After drawing nodes - ",
-            "Enter - Draw Positive Wire",
-            "N + Enter - Draw Negative Wire",
-            "Left Click + Delete - Delete Wire Nodes, Wire & Selected Models"
+            "Left Click + Delete - Delete Wire Nodes, Wire & Selected Models",
+            "After drawing nodes:",
+            "   Enter - Draw Positive Wire",
+            "   N + Enter - Draw Negative Wire"
         ]
         for rule in rules:
-            rulelabel = QLabel(rule)
+            rulelabel = QLabel(f"{rule}\n")
             rulelayout.addWidget(rulelabel)
+
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Q:
+            self.close()
