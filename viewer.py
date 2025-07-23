@@ -1,4 +1,4 @@
-# viewer.py
+#viewer.py
 from PyQt5.QtWidgets import QOpenGLWidget, QSizePolicy
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QMouseEvent
@@ -102,12 +102,12 @@ class OpenGLViewer(QOpenGLWidget):
             self.load_stock(*self.stock) #load stock
 
         for i, obj_data in enumerate(self.loadedmodels): #if models loaded
-            #Draw all models
-            glPushMatrix()
+            # #Draw all models
+            # glPushMatrix()
             glTranslatef(*[0,0,1])
             for mesh in obj_data['meshes']:
-                self.draw_model(mesh,i)
-            glPopMatrix()
+                self.draw_model(mesh,obj_data['transform'],i)
+            # glPopMatrix()
 
             glPointSize(10 / self.scaley)
             glBegin(GL_POINTS)
@@ -138,34 +138,34 @@ class OpenGLViewer(QOpenGLWidget):
         self.orient_camera()
 
     def move_selected_to_position(self,dx,dy):
-        if self.selected_model_indices:
-            for index in self.selected_model_indices:
-                self.loadedmodels[index]['position'][0] = round(self.loadedmodels[index]['position'][0] + dx,4)
-                self.loadedmodels[index]['position'][1] = round(self.loadedmodels[index]['position'][1] - dy,4)
+        for index in self.selected_model_indices:
+            model = self.loadedmodels[index]
+            tx = trimesh.transformations.translation_matrix([dx, -dy, 0])
+            model['transform'] = np.dot(tx, model['transform'])
+            model['position'][0] += dx
+            model['position'][1] -= dy
 
-                transformed_meshes = []
-                for mesh in self.loadedmodels[index]['meshes']:
-                    mesh.apply_translation([dx, -dy, 0])
-                    transformed_meshes.append(mesh)
-                self.loadedmodels[index]['meshes'] = transformed_meshes
+            # Move any wire nodes attached to this model
+            for node in self.wirenodesdata:
+                if node['componentid'] == model['id']:
+                    node['posX'] += dx
+                    node['posY'] -= dy
 
-                terminals = self.loadedmodels[index]['permodel_terminals']
-                for wirenodedata in self.wirenodesdata:
-                    if self.loadedmodels[index]['id'] == wirenodedata['componentid']:
-                        wirenodedata['posX'] = round(wirenodedata['posX'] + dx,4)
-                        wirenodedata['posY'] = round(wirenodedata['posY'] - dy,4)
-                translated_terminals= []
-                for x,y in terminals:
-                    worldx = round(x + dx,4)
-                    worldy = round(y - dy,4)
-                    translated_terminals.append((worldx,worldy))
-                self.loadedmodels[index]['permodel_terminals'] = translated_terminals
-            self.update()
+            # Update terminal positions
+            translated_terminals = []
+            for x, y in model['permodel_terminals']:
+                translated_terminals.append((round(x + dx, 4), round(y - dy, 4)))
+            model['permodel_terminals'] = translated_terminals
+        self.update()
 
-    def draw_model(self, mesh, i):
+    def draw_model(self, mesh, transform, i):
         #get faces and vertices
         faces = mesh.faces
         vertices = mesh.vertices
+
+        glPushMatrix()
+        glMultMatrixf(transform.T)
+
         #get materials
         if hasattr(mesh.visual, 'material') and hasattr(mesh.visual.material, 'diffuse'):
             color = mesh.visual.material.diffuse
@@ -177,19 +177,15 @@ class OpenGLViewer(QOpenGLWidget):
                 glColor3f(0.8, 0.8, 0.8)
             else: #else add material
                 glColor3f(*norm_color)
-            #draw faces
-            glBegin(GL_TRIANGLES)
-            for face in faces:
-                for idx in face:
-                    glVertex3fv(vertices[idx])
-            glEnd()
         else:
             glColor3f(0.6, 0.6, 0.6)
-            glBegin(GL_TRIANGLES)
-            for face in faces:
-                for idx in face:
-                    glVertex3fv(vertices[idx])
-            glEnd()
+        #draw faces
+        glBegin(GL_TRIANGLES)
+        for face in faces:
+            for idx in face:
+                glVertex3fv(vertices[idx])
+        glEnd()
+        glPopMatrix()
 
     def load_model(self, path): #loads model
         sceneormesh = trimesh.load(path, force = 'scene', skip_materials = False) #get mesh from model path (.obj path)
@@ -206,7 +202,7 @@ class OpenGLViewer(QOpenGLWidget):
             terminals = []
             for x,y in self.component_terminals[name]:
                 terminals.append((round(x,4),round(y,4)))
-        model_entry = {'id': self.model_id, 'name': path,'meshes': meshes, 'position': [0,0,1], 'rotation': [0,0,0],'permodel_terminals':terminals}
+        model_entry = {'id': self.model_id, 'name': path,'meshes': meshes, 'position': [0,0,1], 'rotation': [0,0,0],'transform': np.eye(4), 'permodel_terminals':terminals} #add 'transform': np.eye(4)
         self.loadedmodels.append(model_entry) #append meshes to loadedmodels
         self.model_id += 1
         self.update() #Calls paintGL function
@@ -296,7 +292,13 @@ class OpenGLViewer(QOpenGLWidget):
                     hitornot.append(False)
 
             for i, model in enumerate(self.loadedmodels):
-                raycast_mesh = trimesh.util.concatenate(model['meshes'])
+                transformed_meshes = []
+                for mesh in model['meshes']:
+                    transformed = mesh.copy()
+                    transformed.apply_transform(model['transform'])
+                    transformed_meshes.append(transformed)
+
+                raycast_mesh = trimesh.util.concatenate(transformed_meshes)
                 ray = RayMeshIntersector(raycast_mesh)
 
                 hit = ray.intersects_any(
@@ -355,13 +357,13 @@ class OpenGLViewer(QOpenGLWidget):
                     if id == clicked_id:
                         print("Error")
                     else:
-                        # if terminal[0] == clicked_terminal[0] or terminal[1] == clicked_terminal[1]:
-                        #     pass
-                        # elif abs(terminal[0] - clicked_terminal[0]) > abs(terminal[1] - clicked_terminal[1]):
-                        #     self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
-                        # else:
-                        self.wirenodesdata.append({'posX': terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
-                        self.wirenodesdata.append({'posX': clicked_terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
+                        if terminal[0] == clicked_terminal[0] or terminal[1] == clicked_terminal[1]:
+                            pass
+                        elif abs(terminal[0] - clicked_terminal[0]) > abs(terminal[1] - clicked_terminal[1]) and abs(terminal[1] - clicked_terminal[1]) > 0.2:
+                            self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
+                        else:
+                            self.wirenodesdata.append({'posX': terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
+                            self.wirenodesdata.append({'posX': clicked_terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
                         self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
                         self.wire_start_terminal = None
                         self.update()
@@ -437,56 +439,37 @@ class OpenGLViewer(QOpenGLWidget):
             return
 
         angle_radians = np.radians(angle_degrees)
-
+        direction = {'x': [1, 0, 0], 'y': [0, 1, 0], 'z': [0, 0, -1]}[axis]
         for i in self.selected_model_indices:
             model = self.loadedmodels[i]
             rotation_matrix = trimesh.transformations.rotation_matrix(
                 angle_radians,
-                direction={'x': [1,0,0], 'y':[0,1,0], 'z':[0,0,-1]}[axis],
+                direction,
                 point=model['position']
             )
-            transformed_meshes = []
-            for mesh in model['meshes']:
-                mesh.apply_transform(rotation_matrix)
-                transformed_meshes.append(mesh)
-            self.loadedmodels[i]['meshes'] = transformed_meshes
-            if self.loadedmodels[i]['rotation'][2] >= 360:
-                self.loadedmodels[i]['rotation'][2] = 0
-            self.loadedmodels[i]['rotation'] = [0,0,self.loadedmodels[i]['rotation'][2] + angle_degrees]
+            model['transform'] = np.dot(rotation_matrix, model['transform'])
+            model['rotation'][2] += angle_degrees
+            if model['rotation'][2] >= 360:
+                model['rotation'][2] = 0
 
-            rotatedterminals = []
-            terminals = self.loadedmodels[i]['permodel_terminals']
-            id = self.loadedmodels[i]['id']
+
             cos = np.cos(angle_radians)
             sin = np.sin(angle_radians)
+            px, py = model['position'][:2]
+            rotated_terminals = []
+            for x, y in model['permodel_terminals']:
+                dx, dy = x - px, y - py
+                rx = dx * cos - dy * sin + px
+                ry = dx * sin + dy * cos + py
+                rotated_terminals.append((round(rx, 4), round(ry, 4)))
+            model['permodel_terminals'] = rotated_terminals
 
-            if self.wirenodesdata:
-                for index,wirenodedata in enumerate(self.wirenodesdata):
-                    terminal_index = None
-                    if wirenodedata.get('componentid') == id:
-                        for idx,(x,y) in enumerate(terminals):
-                            if abs(x - wirenodedata['posX']) < 0.001 and abs(y - wirenodedata['posY']) < 0.001:
-                                terminal_index = idx
-                                break
-                    for x,y in terminals:
-                        local_x = x - self.loadedmodels[i]['position'][0]
-                        local_y = y - self.loadedmodels[i]['position'][1]
-                        rotated_x = round(local_x * cos - local_y * sin + self.loadedmodels[i]['position'][0],4)
-                        rotated_y = round(local_x * sin + local_y * cos + self.loadedmodels[i]['position'][1],4)
-                        rotatedterminals.append((rotated_x,rotated_y))
-                    self.loadedmodels[i]['permodel_terminals'] = rotatedterminals
-                    if terminal_index is not None:
-                        self.wirenodesdata[index]['posX'] = round(rotatedterminals[terminal_index][0],4)
-                        self.wirenodesdata[index]['posY'] = round(rotatedterminals[terminal_index][1],4)
-            else:
-                for x,y in terminals:
-                    local_x = x - self.loadedmodels[i]['position'][0]
-                    local_y = y - self.loadedmodels[i]['position'][1]
-                    rotated_x = round(local_x * cos - local_y * sin + self.loadedmodels[i]['position'][0],4)
-                    rotated_y = round(local_x * sin + local_y * cos + self.loadedmodels[i]['position'][1],4)
-                    rotatedterminals.append((rotated_x,rotated_y))
-                self.loadedmodels[i]['permodel_terminals'] = rotatedterminals
-            # print(f"After Rotation: {self.loadedmodels[i]['permodel_terminals']}")
+            for node in self.wirenodesdata:
+                if node['componentid'] == model['id']:
+                    for idx, (x, y) in enumerate(rotated_terminals):
+                        if abs(node['posX'] - x) < 0.001 and abs(node['posY'] - y) < 0.001:
+                            node['posX'], node['posY'] = x, y
+                            break
         self.update()
 
     def delete_selected(self):
