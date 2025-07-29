@@ -322,8 +322,8 @@ class CircuitBuilderWindow(QMainWindow):
         if menu.exec_() == QDialog.Accepted:#if the component has been selected
             print(self.selectedobjpath)
             self.viewer.load_model(self.selectedobjpath) #load model in path
-            if self.dropdown.findText("MENU") != -1: #switch to MENU option
-                self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
+        if self.dropdown.findText("MENU") != -1: #switch to MENU option
+            self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_M and self.viewer.stockdrawn: #if M pressed and stock drawn

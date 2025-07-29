@@ -352,22 +352,32 @@ class OpenGLViewer(QOpenGLWidget):
 
             if clicked_terminal:
                 if self.wire_start_terminal is None:
-                    self.wire_start_terminal = (clicked_terminal, clicked_id, clicked_key)
+                    self.wire_start_terminal = (clicked_terminal, clicked_id, clicked_key, battery_neg)
                     self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1], 'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg})
                     self.update()
                 else:
-                    (terminal, id, _) = self.wire_start_terminal
+                    (terminal, id, _, start_neg) = self.wire_start_terminal
                     if id == clicked_id:
                         print("Error")
                     else:
-                        if terminal[0] == clicked_terminal[0] or terminal[1] == clicked_terminal[1]:
-                            pass
-                        elif abs(terminal[0] - clicked_terminal[0]) > 0.6 or abs(terminal[1] - clicked_terminal[1]) > 0.6:
-                            self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
+                        if battery_neg == "n" or start_neg == "n":
+                            if abs(terminal[0] - clicked_terminal[0]) > abs(terminal[1] - clicked_terminal[1]):
+                                self.wirenodesdata.append({'posX': terminal[0], 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
+                                self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
+                                self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
+                            else:
+                                print("x <= y")
+                                self.wirenodesdata.append({'posX': terminal[0]+0.1, 'posY': terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
+                                self.wirenodesdata.append({'posX': terminal[0]+0.1, 'posY': clicked_terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
+                                self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
                         else:
-                            self.wirenodesdata.append({'posX': terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
-                            self.wirenodesdata.append({'posX': clicked_terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
-                        self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
+                            if terminal[0] == clicked_terminal[0] or terminal[1] == clicked_terminal[1]:
+                                pass
+                            elif abs(terminal[0] - clicked_terminal[0]) >  abs(terminal[1] - clicked_terminal[1]):
+                                self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
+                            else:
+                                self.wirenodesdata.append({'posX': terminal[0], 'posY': clicked_terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
+                            self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
                         self.wire_start_terminal = None
                         self.update()
             else:
@@ -464,15 +474,14 @@ class OpenGLViewer(QOpenGLWidget):
                 dx, dy = x - px, y - py
                 rx = dx * cos - dy * sin + px
                 ry = dx * sin + dy * cos + py
+                for node in self.wirenodesdata:
+                    if node['componentid'] == model['id']:
+                        if abs(node['posX'] - x) < 0.001 and abs(node['posY'] - y) < 0.001:
+                            node['posX'], node['posY'] = rx, ry
+                            break
                 rotated_terminals.append((round(rx, 4), round(ry, 4)))
             model['permodel_terminals'] = rotated_terminals
 
-            for node in self.wirenodesdata:
-                if node['componentid'] == model['id']:
-                    for idx, (x, y) in enumerate(rotated_terminals):
-                        if abs(node['posX'] - x) < 0.001 and abs(node['posY'] - y) < 0.001:
-                            node['posX'], node['posY'] = x, y
-                            break
         self.update()
 
     def delete_selected(self):
