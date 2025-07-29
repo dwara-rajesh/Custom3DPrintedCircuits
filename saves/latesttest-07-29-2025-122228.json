@@ -1,0 +1,132 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -1.5,
+            "posY": -1.0,
+            "dimX": 3.0,
+            "dimY": 2.0,
+            "dimZ": 0.5,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\button.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\button.f3d",
+            "posX": -2.5,
+            "posY": -1.0,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\battery.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\battery.f3d",
+            "posX": -0.5,
+            "posY": -1.0,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\LED.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\LED.f3d",
+            "posX": -1.5,
+            "posY": -0.25,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        }
+    ],
+    "wiresdata": [
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -0.5,
+                    "posY": -0.64,
+                    "component": "battery",
+                    "componentid": 1,
+                    "batteryneg": "p"
+                },
+                {
+                    "posX": -0.4963,
+                    "posY": -0.2312,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.3622,
+                    "posY": -0.25,
+                    "component": "LED",
+                    "componentid": 2,
+                    "batteryneg": null
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -1.6378,
+                    "posY": -0.25,
+                    "component": "LED",
+                    "componentid": 2,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.5,
+                    "posY": -0.25,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.5,
+                    "posY": -0.622,
+                    "component": "button",
+                    "componentid": 0,
+                    "batteryneg": null
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -2.5,
+                    "posY": -1.378,
+                    "component": "button",
+                    "componentid": 0,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.5458,
+                    "posY": -1.7447,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -0.5,
+                    "posY": -1.0,
+                    "component": "battery",
+                    "componentid": 1,
+                    "batteryneg": "n"
+                }
+            ],
+            "pole": "n"
+        }
+    ]
+}

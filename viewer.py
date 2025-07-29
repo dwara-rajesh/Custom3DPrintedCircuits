@@ -20,7 +20,7 @@ class OpenGLViewer(QOpenGLWidget):
 
         #Component terminals relative to component centre
         self.component_terminals = {
-            "LED.obj": [(-0.1378,0),(0.1378,0)],
+            "LED.obj": [(-0.1378,0),(0.1378,0)], #[neg,pos]
             "microcontroller.obj": [(-0.225,0.375),(0.225, 0.375),(-0.25,0.225),(0.25,0.225),(-0.25,0.125),(0.25,0.125),(-0.25,0.025),(0.25,0.025),(-0.25,-0.075),(0.25,-0.075),(-0.25,-0.175),(0.25,-0.175),(-0.24,-0.27),(0.24,-0.27)], #top to bottom - (right, left)
             "button.obj": [(-0.378,0),(0.378,0)],
             "battery.obj": [(0,0),(0.36,0)] #negative terminal at (0,0)
@@ -111,10 +111,13 @@ class OpenGLViewer(QOpenGLWidget):
 
             glPointSize(10 / self.scaley)
             glBegin(GL_POINTS)
-            glColor3f(0.0,1.0,0.0)
             terminals = obj_data['permodel_terminals']
-            for x,y in terminals:
-                glVertex3f(x, y, 2.0)
+            for i,(coordinates) in enumerate(terminals):
+                if (os.path.basename(obj_data['name']) == "LED.obj" or os.path.basename(obj_data['name']) == "battery.obj") and i == 0:
+                    glColor3f(0.0,0.0,0.0)
+                else:
+                    glColor3f(0.0,1.0,0.0)
+                glVertex3f(coordinates[0], coordinates[1], 2.0)
             glEnd()
 
         for i, nodedata in enumerate(self.wirenodesdata):
@@ -359,7 +362,7 @@ class OpenGLViewer(QOpenGLWidget):
                     else:
                         if terminal[0] == clicked_terminal[0] or terminal[1] == clicked_terminal[1]:
                             pass
-                        elif abs(terminal[0] - clicked_terminal[0]) > abs(terminal[1] - clicked_terminal[1]):
+                        elif abs(terminal[0] - clicked_terminal[0]) > 0.6 or abs(terminal[1] - clicked_terminal[1]) > 0.6:
                             self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
                         else:
                             self.wirenodesdata.append({'posX': terminal[0]+0.5, 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
@@ -519,10 +522,13 @@ class OpenGLViewer(QOpenGLWidget):
             return
 
         if event.key() == Qt.Key_Q:
+            if event.isAutoRepeat():
+                return
+
             parent = self.parent()
-            if parent:
+            if parent and self.manualbook is None:
                 from uibuilder import Manual
-                self.manualbook = Manual(parent)
+                self.manualbook = Manual(viewer = self, parent = parent)
                 self.manualbook.show()
 
         if event.key() == Qt.Key_Delete:

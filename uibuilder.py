@@ -556,27 +556,32 @@ class Selection(QDialog): #Load component menu - shows sall available components
         self.accept()
 
 class Manual(QDialog):
-    def __init__(self, parent = None):
+    def __init__(self, viewer, parent = None):
         super().__init__(parent)
+        self.viewer = viewer
         self.setWindowTitle("Manual")
         self.resize(600,600)
         rulelayout = QVBoxLayout(self)
         rules = [
-            "Left Click - Selected Models & Wire Nodes",
-            "Shift + Left Click - Multi-select wire nodes",
-            "R + Left Click - Rotate Selected Models",
-            "M + Left Click - Move Selected Models",
-            "W + Left Click on start and end terminals - Draw Wire Nodes",
-            "Left Click + Drag - Move Wire Nodes",
-            "Left Click + Delete - Delete Wire Nodes, Wire & Selected Models",
-            "After drawing nodes:",
-            "   Enter - Draw Positive Wire",
-            "   N + Enter - Draw Negative Wire"
+            "> Left Click - Selected Models & Wire Nodes",
+            "> Shift + Left Click - Multi-select wire nodes",
+            "> R + Left Click - Rotate Selected Models",
+            "> M + Left Click - Move Selected Models",
+            "> W + Left Click on start and end terminals - Draw Wire Nodes",
+            "> Left Click + Drag - Move Wire Nodes",
+            "> Left Click + Delete - Delete Wire Nodes, Wire & Selected Models",
+            "> After drawing nodes:",
+            "---> Enter - Draw Positive Wire",
+            "---> N + Enter - Draw Negative Wire"
         ]
         for rule in rules:
             rulelabel = QLabel(f"{rule}\n")
             rulelayout.addWidget(rulelabel)
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Q:
+        if event.isAutoRepeat():
+            return
+
+        if event.key() == Qt.Key_Q and self.viewer.manualbook:
+            self.viewer.manualbook = None
             self.close()
