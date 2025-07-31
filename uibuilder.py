@@ -86,6 +86,10 @@ class CircuitBuilderWindow(QMainWindow):
         self.working_dir = os.getcwd()
         self.save_folder = r"saves"
         self.save_folderpath = os.path.join(self.working_dir, self.save_folder)
+
+        self.cachefilepath = r"cache\prev.json"
+        self.cachefullpath = os.path.join(self.working_dir, self.cachefilepath)
+
         self.closeproj = False
         self.uploadfile = False
         self.saveUI = QWidget()
@@ -177,8 +181,15 @@ class CircuitBuilderWindow(QMainWindow):
     def loadprojfile(self,path):
         self.stockdimensionsui.hide() #hide stock dimensions UI
         self.stockdimensionsui.setEnabled(False) #disable stock dimensions UI
+        self.saveUI.hide()
+        self.saveUI.setEnabled(False)
+        self.position_ui.hide()
+        self.position_ui.setEnabled(False)
         self.header.show() #unhide header
         self.header.setEnabled(True) #make header interactable
+
+        self.viewer.loadedmodels.clear()
+        self.viewer.stock = None
         with open(path, "r") as f: #Load and read file
             data = json.load(f)
 
@@ -344,6 +355,10 @@ class CircuitBuilderWindow(QMainWindow):
                 self.position_ui.show()
                 self.position_ui.setEnabled(True)
 
+        if event.modifiers() & Qt.ControlModifier:
+            if event.key() == Qt.Key_Z and self.viewer.stockdrawn:
+                self.loadprojfile(self.cachefullpath)
+
     def get_selected_position(self):
         if self.viewer.selected_model_indices: #if model seleceted
             #get current position
@@ -455,6 +470,30 @@ class CircuitBuilderWindow(QMainWindow):
             self.savewarningtext.setText("")
             if self.dropdown.findText("MENU") != -1:
                     self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
+
+    def cachingforundo(self):
+        with open(self.cachefullpath, 'w') as f:
+            pass
+        save_data = {'componentdata': [], 'wiresdata': []}
+        self.components.clear()
+        f3ds_folder = r"assets\f3ds"
+        full_f3d_folder = os.path.join(self.working_dir, f3ds_folder)
+        if self.stock_model_data:
+            self.components.append(self.stock_model_data) #add stock data
+        for model in self.viewer.loadedmodels:#go through each loaded model
+            f3dpath = os.path.splitext(os.path.basename(model['name']))[0] + ".f3d"
+            fullf3dpath = os.path.join(full_f3d_folder, f3dpath) #get f3d path
+            #populate component list with dictionary as below
+            self.components.append({'modelName': model['name'], 'f3dName': fullf3dpath, #obj path, f3d path
+                                        'posX':round(model['position'][0],4), 'posY':round(model['position'][1],4), #x,y position relative to origin
+                                        'dimX': 0, 'dimY': 0, 'dimZ': 0, #dimensions
+                                        'rotX': model['rotation'][0], 'rotY': model['rotation'][1], 'rotZ': model['rotation'][2]}) #rotation relative to center of model
+
+        #load the data into save_data to save in .json file
+        save_data['componentdata'] = self.components
+        save_data['wiresdata'] = self.viewer.wiredata
+        with open(self.cachefullpath, "w") as f: #open .json file in file path generated previously
+            json.dump(save_data, f, indent=4) #save in json file
 
     def delay(self):
         #remove notification to user

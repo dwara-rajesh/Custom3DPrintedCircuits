@@ -148,7 +148,7 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
     vacuum_on() # Turn vacuum on if it is not already
     print("Vacuum On")
     starttime = time.time()
-
+    pickupfailed = False
     while get_pressure() > PRESSURE_THRESHOLD: # True when object not yet picked up
         nozzle_forces = rtde_receive.getActualTCPForce()
         if nozzle_forces[2] <= MAX_FORCE: # Check to ensure that if the vacuum fails, we still stop the nozzle safely!
@@ -162,6 +162,13 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
         # Check if max wait has been exceeded:
         if time.time() - starttime >= max_wait:
             print("Pick-and-Place nozzle WARNING: Wait time exceeded!")
+            index += 1
+            grid = COMPONENTS[component]['grid']
+            maxindex = grid[0] * grid[1]
+            if index >= maxindex:
+                pickupfailed = True
+            else:
+                target_pos = pickup_component(component=component, index=index)
             break
 
     # Assuming the pressure drop means the object was picked up, move the nozzle up to pick the component out of the tray
@@ -169,6 +176,8 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
     heaven_pos[2] = heaven
     time.sleep(1) # Small delay to allow vacuum to set in before lifting component
     goto_pos(heaven_pos)
+
+    return pickupfailed, index
 
 def place_component(target_pos, heaven=100):
     """
@@ -203,7 +212,10 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
 
     # Placeholder for component stock index tracking (To account for depletion of tray components)
     index = 0
-    placed_components = []
+    placed_components = {"battery": [],
+                         "microcontroller": [],
+                         "button": [],
+                         "led": []}
 
     if print_log == True:
         print("Pick-and-Place - Closing and cycling vice...")
@@ -223,12 +235,17 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
         print("Pick-and-Place - Starting component assembly sequence...")
     part_num = 1
     for component in schematic:
-        if component['type'] in placed_components:
-            index = placed_components.count(component['type'])
+        grid = COMPONENTS[component['type']]['grid']
+        maxindex = grid[0] * grid[1]
+        while index in placed_components[component['type']]:
+            index += 1
+            if index >= maxindex:
+                print(f"ComponentInventory ERROR: {component['type']} inventory is empty! Please refill")
+                break
 
         if print_log == True:
             print(f"Pick-and-Place: {part_num}/{len(schematic)}\nPicking up {component['type']} #{index} from {component['type']} inventory grid")
-        pickup_component(component['type'], index)
+        pickup, ind = pickup_component(component['type'], index)
         if print_log:
             print(f"Placing component [{component['type']}] in Coordinates: {component['pos']}")
         place_component(component['pos'])

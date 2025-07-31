@@ -1,7 +1,7 @@
 #viewer.py
 from PyQt5.QtWidgets import QOpenGLWidget, QSizePolicy
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtGui import QMouseEvent, QKeyEvent
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -12,6 +12,7 @@ import numpy as np
 class OpenGLViewer(QOpenGLWidget):
     def __init__(self, parent=None):
         super(OpenGLViewer, self).__init__(parent)
+        self.parentbuilder = parent
         #Set up widget for key presses
         self.setFocusPolicy(Qt.StrongFocus)
 
@@ -141,6 +142,8 @@ class OpenGLViewer(QOpenGLWidget):
         self.orient_camera()
 
     def move_selected_to_position(self,dx,dy):
+        if self.parentbuilder:
+            self.parentbuilder.cachingforundo()
         for index in self.selected_model_indices:
             model = self.loadedmodels[index]
             tx = trimesh.transformations.translation_matrix([dx, -dy, 0])
@@ -191,6 +194,8 @@ class OpenGLViewer(QOpenGLWidget):
         glPopMatrix()
 
     def load_model(self, path): #loads model
+        if self.parentbuilder:
+            self.parentbuilder.cachingforundo()
         sceneormesh = trimesh.load(path, force = 'scene', skip_materials = False) #get mesh from model path (.obj path)
         meshes = []
 
@@ -211,6 +216,8 @@ class OpenGLViewer(QOpenGLWidget):
         self.update() #Calls paintGL function
 
     def stock_available(self, length, width, height):
+        if self.parentbuilder:
+            self.parentbuilder.cachingforundo()
         self.stock = (length, width, height) #defines stock dimensions
         self.update() #calls paintGL function
 
@@ -274,6 +281,8 @@ class OpenGLViewer(QOpenGLWidget):
         glEnd()
 
     def mousePressEvent(self, event): #when mouse pressed
+        if self.parentbuilder:
+            self.parentbuilder.cachingforundo()
         if not self.drawwirenode:
             hitornot = []
             self.last_mouse_pos = event.pos() #get position of mouse on press time
@@ -448,6 +457,8 @@ class OpenGLViewer(QOpenGLWidget):
         return ray_origin, ray_direction
 
     def rotate_selected(self,angle_degrees = 90, axis = 'z'):
+        if self.parentbuilder:
+            self.parentbuilder.cachingforundo()
         if not self.selected_model_indices:
             return
 
@@ -485,6 +496,8 @@ class OpenGLViewer(QOpenGLWidget):
         self.update()
 
     def delete_selected(self):
+        if self.parentbuilder:
+            self.parentbuilder.cachingforundo()
         if not self.selected_model_indices and not self.selected_node_indices:
             return
 
@@ -558,6 +571,13 @@ class OpenGLViewer(QOpenGLWidget):
                 self.update()
             else:
                 print("Not Enough nodes")
+
+        if event.modifiers() & Qt.ControlModifier:
+            if event.key() == Qt.Key_Z:
+                parent = self.parent()
+                if parent:
+                    parent.keyPressEvent(event)
+                return
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Shift:
