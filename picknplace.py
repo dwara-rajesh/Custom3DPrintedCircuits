@@ -12,28 +12,28 @@ from coreModule import *
 
 PRESSURE_THRESHOLD = 6.0 # If vacuum is on, and pressure reading is below this, an object has been picked up!
 admlviceblock_yoff = 0.486 / 39.37 #convert in to m
-origin = [-0.27629,-0.33692-admlviceblock_yoff,-0.25571] #top right corner of stock on vice in rosie station
+origin = [0.2765406784535635,-0.3373023151065945-admlviceblock_yoff,0.1433312511711961, 0, math.pi, 0] #top right corner of stock on vice in rosie station
 
 # Position data (In table coordinates) of the electronic component tray grids (Only XY coordinates)
 COMPONENTS = {'battery': {'start': [91.87, 50.15],   # XY coords of the start of the grid (Bottom left corner)
                             'end': [142.33, 100.72], # XY coords of the end of the grid (Top right corner)
                            'grid': (3, 3),           # Grid dimensions (3x3)
-                      'threshold': 6.5,              # Pressure threshold for pickup
+                      'threshold': 9.5,              # Pressure threshold for pickup
                           'z_val': 0.0},             # Height offset for pick up (Active pressure feedback pickup starts at this height)
                   'led': {'start': [22.55, 66.63],
                             'end': [67.39, 106.07],
                            'grid': (4, 5),           # Grid dimensions (4x5)
-                      'threshold': 9.5,
+                      'threshold': 10.65,
                           'z_val': 0.0},
                'button': {'start': [29.7, 13.95],
                             'end': [60.45, 50.25],
                            'grid': (2, 4),           # Grid dimensions (2x4)
-                      'threshold': 7.8,
+                      'threshold': 9.7,
                           'z_val': 1.0},
       'microcontroller': {'start': [101.84, 19.98],
                             'end': [139.93, 19.98],
                            'grid': (2, 1),           # Grid dimensions (2x1)
-                      'threshold': 6.5,
+                      'threshold': 9.5,
                           'z_val': -1.0}}
 
 # get recent save data
@@ -45,8 +45,9 @@ def get_most_recent_saved_file(folder):
 
 # get robot world coordinates for components
 def determine_schematic():
-    savefolderpath = os.path.join(os.getcwd(),"saves")
-    recentsavefilepath = get_most_recent_saved_file(savefolderpath)
+    # savefolderpath = os.path.join(os.getcwd(),"saves")
+    # recentsavefilepath = get_most_recent_saved_file(savefolderpath)
+    recentsavefilepath = r"C:\git\ADML\Automated Circuit Printing and Assembly\finalSendToMill.json"
     print(f"Save file path: {recentsavefilepath}")
 
     with open(recentsavefilepath, 'r') as f:
@@ -58,9 +59,12 @@ def determine_schematic():
             name = os.path.splitext(os.path.basename(component['modelName']))[0].lower()
             position_x = origin[0] + (component['posX']/39.37) #convert in to m
             position_y = origin[1] + (component['posY']/39.37)
-            position_z = 43 / 1000 #convert mm to m dummy for now
+            position_z = origin[2]
             position = [position_x,position_y,position_z]
-            circuit_schematic.append({'type': name, 'pos': position})
+            if component['rotZ'] == 270:
+                component['rotZ'] = -90
+            rotation = math.radians(component['rotZ'])
+            circuit_schematic.append({'type': name, 'pos': position, 'rot': rotation})
 
     return circuit_schematic
 
@@ -111,7 +115,7 @@ def move_to_component(component, index, Z_target=2.0, speed=precise):
     goto_pos(target_pos, speed=speed)
     return target_pos
 
-def pickup_component(component, index, skip_hover=False, print_warnings=False):
+def pickup_component(component, index, skip_hover=False, print_warnings=True):
     """
     Moves to, and picks up the specified component using the
     vacuum pick-and-place nozzle
@@ -149,7 +153,7 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
     print("Vacuum On")
     starttime = time.time()
     pickupfailed = False
-    while get_pressure() > PRESSURE_THRESHOLD: # True when object not yet picked up
+    while time.time() - starttime < max_wait and get_pressure() > PRESSURE_THRESHOLD: # True when object not yet picked up
         nozzle_forces = rtde_receive.getActualTCPForce()
         if nozzle_forces[2] <= MAX_FORCE: # Check to ensure that if the vacuum fails, we still stop the nozzle safely!
             target_pos[2] -= step
@@ -159,17 +163,20 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
                 break
             if print_warnings == True:
                 print("Pick-and-Place nozzle WARNING: Max force exceeded!")
-        # Check if max wait has been exceeded:
-        if time.time() - starttime >= max_wait:
-            print("Pick-and-Place nozzle WARNING: Wait time exceeded!")
-            index += 1
-            grid = COMPONENTS[component]['grid']
-            maxindex = grid[0] * grid[1]
-            if index >= maxindex:
-                pickupfailed = True
-            else:
-                target_pos = pickup_component(component=component, index=index)
-            break
+    # Check if max wait has been exceeded:
+    if time.time() - starttime >= max_wait:
+        print("Pick-and-Place nozzle WARNING: Wait time exceeded!")
+    if get_pressure() > PRESSURE_THRESHOLD:
+        print("Pick N Place: Failed to pickup component in slot, moving to next slot to attempt pickup")
+        index += 1
+        grid = COMPONENTS[component]['grid']
+        maxindex = grid[0] * grid[1]
+        if index >= maxindex:
+            pickupfailed = True
+        else:
+            target_pos = pickup_component(component=component, index=index)
+    else:
+        print(f"Pick N Place: Picked up [{component}] from slot [{index}]]")
 
     # Assuming the pressure drop means the object was picked up, move the nozzle up to pick the component out of the tray
     heaven_pos = initial_pos.copy()
@@ -179,7 +186,7 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
 
     return pickupfailed, index
 
-def place_component(target_pos, heaven=100):
+def place_component(target_pos,rot, heaven=100):
     """
     Places the currently held component at the target coordinates
     Travels at heaven height to avoid collisions
@@ -194,13 +201,24 @@ def place_component(target_pos, heaven=100):
 
     # Travel to target coordinates
     goto_pos([target_pos[0], target_pos[1], heaven], speed=precise)
-    goto_pos(target_pos, speed=precise)
+
+    jointangles = rtde_receive.getActualQ()
+    jointangles[5] += rot
+    rtde_control.moveJ(jointangles)
+
+    currentrot = get_robot_pos()[3:]
+    goto_pos(target_pos, currentrot, speed=precise)
 
     # Place component and return to heaven
     set_pressure(PLACE_PRESSURE) # Apply short burst of positive pressure to release component
     time.sleep(0.8)
     vacuum_off(delay=2)
+    
     goto_pos([target_pos[0], target_pos[1], heaven], speed=slow)
+    jointangles = rtde_receive.getActualQ()
+    jointangles[5] -= rot
+    rtde_control.moveJ(jointangles)
+    
 
 def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
     """
@@ -234,6 +252,7 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
     if print_log == True:
         print("Pick-and-Place - Starting component assembly sequence...")
     part_num = 1
+    pickupfailed = False
     for component in schematic:
         grid = COMPONENTS[component['type']]['grid']
         maxindex = grid[0] * grid[1]
@@ -241,16 +260,22 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
             index += 1
             if index >= maxindex:
                 print(f"ComponentInventory ERROR: {component['type']} inventory is empty! Please refill")
+                pickupfailed = True
                 break
-
-        if print_log == True:
-            print(f"Pick-and-Place: {part_num}/{len(schematic)}\nPicking up {component['type']} #{index} from {component['type']} inventory grid")
-        pickup, ind = pickup_component(component['type'], index)
-        if print_log:
-            print(f"Placing component [{component['type']}] in Coordinates: {component['pos']}")
-        place_component(component['pos'])
-        placed_components.append(component['type'])
-        part_num += 1
+        if pickupfailed:
+            break
+        else:
+            if print_log == True:
+                print(f"Pick-and-Place: {part_num}/{len(schematic)}\nPicking up {component['type']} #{index} from {component['type']} inventory grid")
+            pickup, ind = pickup_component(component['type'], index)
+            if pickup:
+                print(f"ComponentInventory ERROR: {component['type']} inventory is empty! Please refill")
+            else:
+                if print_log:
+                    print(f"Placing component [{component['type']}] in Coordinates: {component['pos']}")
+                place_component(component['pos'], component['rot'])
+                placed_components[component['type']].append(ind)
+                part_num += 1
 
     # Return to standby
     if print_log == True:
