@@ -142,8 +142,6 @@ class OpenGLViewer(QOpenGLWidget):
         self.orient_camera()
 
     def move_selected_to_position(self,dx,dy):
-        if self.parentbuilder:
-            self.parentbuilder.cachingforundo()
         for index in self.selected_model_indices:
             model = self.loadedmodels[index]
             tx = trimesh.transformations.translation_matrix([dx, -dy, 0])
@@ -195,7 +193,7 @@ class OpenGLViewer(QOpenGLWidget):
 
     def load_model(self, path): #loads model
         if self.parentbuilder:
-            self.parentbuilder.cachingforundo()
+            self.parentbuilder.cache_for_undo_then_update()
         sceneormesh = trimesh.load(path, force = 'scene', skip_materials = False) #get mesh from model path (.obj path)
         meshes = []
 
@@ -216,8 +214,6 @@ class OpenGLViewer(QOpenGLWidget):
         self.update() #Calls paintGL function
 
     def stock_available(self, length, width, height):
-        if self.parentbuilder:
-            self.parentbuilder.cachingforundo()
         self.stock = (length, width, height) #defines stock dimensions
         self.update() #calls paintGL function
 
@@ -281,8 +277,6 @@ class OpenGLViewer(QOpenGLWidget):
         glEnd()
 
     def mousePressEvent(self, event): #when mouse pressed
-        if self.parentbuilder:
-            self.parentbuilder.cachingforundo()
         if not self.drawwirenode:
             hitornot = []
             self.last_mouse_pos = event.pos() #get position of mouse on press time
@@ -457,8 +451,6 @@ class OpenGLViewer(QOpenGLWidget):
         return ray_origin, ray_direction
 
     def rotate_selected(self,angle_degrees = 90, axis = 'z'):
-        if self.parentbuilder:
-            self.parentbuilder.cachingforundo()
         if not self.selected_model_indices:
             return
 
@@ -496,8 +488,6 @@ class OpenGLViewer(QOpenGLWidget):
         self.update()
 
     def delete_selected(self):
-        if self.parentbuilder:
-            self.parentbuilder.cachingforundo()
         if not self.selected_model_indices and not self.selected_node_indices:
             return
 
@@ -532,12 +522,16 @@ class OpenGLViewer(QOpenGLWidget):
             self.multiselect = True
 
         if event.key() == Qt.Key_R:
+            if self.parentbuilder:
+                self.parentbuilder.cache_for_undo_then_update()
             self.rotate_selected()
 
         if event.key() == Qt.Key_N:
             self.n_pressed = True
 
         if event.key() == Qt.Key_M:
+            if self.parentbuilder:
+                self.parentbuilder.cache_for_undo_then_update()
             parent = self.parent()
             if parent:
                 parent.keyPressEvent(event)
@@ -554,12 +548,18 @@ class OpenGLViewer(QOpenGLWidget):
                 self.manualbook.show()
 
         if event.key() == Qt.Key_Delete:
+            if self.parentbuilder:
+                self.parentbuilder.cache_for_undo_then_update()
             self.delete_selected()
 
         if event.key() == Qt.Key_W and self.stockdrawn:
+            if self.parentbuilder:
+                self.parentbuilder.cache_for_undo_then_update()
             self.drawwirenode = True
 
         if event.key() in (Qt.Key_Return, Qt.Key_Enter) and self.stockdrawn:
+            if self.parentbuilder:
+                self.parentbuilder.cache_for_undo_then_update()
             self.end = len(self.wirenodesdata)
             if len(self.wirenodesdata[self.start:self.end]) >= 2:
                 if self.n_pressed:

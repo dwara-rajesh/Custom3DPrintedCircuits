@@ -87,6 +87,8 @@ class CircuitBuilderWindow(QMainWindow):
         self.save_folder = r"saves"
         self.save_folderpath = os.path.join(self.working_dir, self.save_folder)
 
+        self.undofilepath = r"cache\undo.json"
+        self.undofullpath = os.path.join(self.working_dir, self.undofilepath)
         self.cachefilepath = r"cache\prev.json"
         self.cachefullpath = os.path.join(self.working_dir, self.cachefilepath)
 
@@ -188,8 +190,6 @@ class CircuitBuilderWindow(QMainWindow):
         self.header.show() #unhide header
         self.header.setEnabled(True) #make header interactable
 
-        self.viewer.loadedmodels.clear()
-        self.viewer.stock = None
         with open(path, "r") as f: #Load and read file
             data = json.load(f)
 
@@ -357,6 +357,23 @@ class CircuitBuilderWindow(QMainWindow):
 
         if event.modifiers() & Qt.ControlModifier:
             if event.key() == Qt.Key_Z and self.viewer.stockdrawn:
+                self.viewer.loadedmodels.clear()
+                self.viewer.stock = None
+                self.viewer.wirenodesdata.clear()
+                self.viewer.wiredata.clear()
+                self.viewer.selected_model_indices.clear()
+                self.viewer.selected_node_indices.clear()
+                self.viewer.wire_start_terminal = None
+                self.viewer.start = 0
+                self.viewer.end = 0
+
+                # Reset model ID counter to avoid conflicts
+                self.viewer.model_id = 0
+                # with open(self.cachefullpath, "r") as f: #Load and read file
+                #     data = json.load(f)
+                # with open(self.undofullpath, "w") as f: #Load and read file
+                #     json.dump(data, f, indent=4)
+
                 self.loadprojfile(self.cachefullpath)
 
     def get_selected_position(self):
@@ -395,6 +412,7 @@ class CircuitBuilderWindow(QMainWindow):
 
             self.posoffset_x_in.clear()
             self.posoffset_y_in.clear()
+            self.cache_for_undo_then_update()
             self.viewer.move_selected_to_position(xoff,yoff) #set position
             self.get_selected_position()#get the new position
 
@@ -471,9 +489,7 @@ class CircuitBuilderWindow(QMainWindow):
             if self.dropdown.findText("MENU") != -1:
                     self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
 
-    def cachingforundo(self):
-        with open(self.cachefullpath, 'w') as f:
-            pass
+    def cache_for_undo_then_update(self):
         save_data = {'componentdata': [], 'wiresdata': []}
         self.components.clear()
         f3ds_folder = r"assets\f3ds"

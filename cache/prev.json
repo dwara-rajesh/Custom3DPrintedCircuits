@@ -1,0 +1,17 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -1.5,
+            "posY": -1.0,
+            "dimX": 3.0,
+            "dimY": 2.0,
+            "dimZ": 1.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        }
+    ],
+    "wiresdata": []
+}
