@@ -618,11 +618,12 @@ class Manual(QDialog):
         self.resize(600,600)
         rulelayout = QVBoxLayout(self)
         rules = [
-            "> Left Click - Selected Models & Wire Nodes",
+            "> Left Click - Select Models & Wire Nodes",
             "> Shift + Left Click - Multi-select wire nodes",
-            "> R + Left Click - Rotate Selected Models",
-            "> M + Left Click - Move Selected Models",
-            "> W + Left Click on start and end terminals - Draw Wire Nodes",
+            "> After selecting model",
+            "---> R - Rotate Selected Models",
+            "---> M - Move Selected Models",
+            "> W + Left Click on source and destination terminals - Draw Wire Nodes",
             "> Left Click + Drag - Move Wire Nodes",
             "> Left Click + Delete - Delete Wire Nodes, Wire & Selected Models",
             "> After drawing nodes:",
