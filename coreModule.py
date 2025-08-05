@@ -50,6 +50,12 @@ CALIBRATION_DATA = {'vac': None,
 # Tray component data location and memory [CWD is "C:\git\ADML"]
 COMPONENT_TRAY_FILEPATH = "tray_data.txt"
 
+COMPONENT_HEIGHTS = { #in mm
+    'battery': 1.6,
+    'button': 8.6,
+    'microcontroller': 5.55,
+    'led': 2.55
+}
 # Basic constants and definitions:
 vac_IO = 5 # IO pin for the vacuum solenoid
 ink_IO = 4 # IO pin for the ink extrusion solenoid

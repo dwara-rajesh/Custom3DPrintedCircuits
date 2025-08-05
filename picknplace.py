@@ -12,7 +12,11 @@ from coreModule import *
 
 PRESSURE_THRESHOLD = 6.0 # If vacuum is on, and pressure reading is below this, an object has been picked up!
 admlviceblock_yoff = 0.486 / 39.37 #convert in to m
-origin_in_m = [0.2765406784535635,-0.3373023151065945-admlviceblock_yoff,0.15409418218552073, 0, math.pi, 0] #top right corner of stock on vice in rosie station
+z_origin_offset_from_sensor = 1.747 / 39.37 #convert in to m
+
+load_calibration_data()
+z_origin = CALIBRATION_DATA['vac'][2] + z_origin_offset_from_sensor
+origin_in_m = [0.2765406784535635,-0.3373023151065945-admlviceblock_yoff,z_origin, 0, math.pi, 0] #top right corner of stock on vice in rosie station
 origin = [val * 1000 for val in origin_in_m[:3]] + [0,math.pi,0] #origin in mm
 tip_offset_from_gripper = 1.1705 * 25.4 #convert in to mm
 pickupfailed = False
@@ -61,7 +65,7 @@ def determine_schematic():
             name = os.path.splitext(os.path.basename(component['modelName']))[0].lower()
             position_x = origin[0] + (component['posX'] * 25.4) #convert in to mm
             position_y = origin[1] + (component['posY'] * 25.4)
-            position_z = origin[2]
+            position_z = origin[2] + COMPONENT_HEIGHTS[name]
             position = [position_x,position_y,position_z]
             if component['rotZ'] == 270:
                 component['rotZ'] = -90
@@ -211,21 +215,18 @@ def place_component(target_pos,rot, heaven=0.4318552510405578):#100):
     # actual_pos[2] = heaven
     # print("GOTO ActualPos Heaven")
     # goto_pos(actual_pos)
-    
+
     # Travel to target coordinates
-    print("MOVEL TargetPos Heaven")
     rtde_control.moveL([target_pos[0], target_pos[1], heaven,0,math.pi,0], speed=precise)
 
     jointangles = rtde_receive.getActualQ()
 
     initialjoint = jointangles[5]
     jointangles[5] += rot
-    print("MOVEJ Orient to component rotation")
     rtde_control.moveJ(jointangles)
 
     currentrot = get_robot_pos()[3:]
     finaltarget = target_pos + currentrot
-    print("MOVEL TagetPos after orientation")
     rtde_control.moveL(finaltarget, speed=precise)
 
     # Place component and return to heaven
@@ -234,11 +235,9 @@ def place_component(target_pos,rot, heaven=0.4318552510405578):#100):
     vacuum_off(delay=2)
 
     target_heaven = [target_pos[0], target_pos[1], heaven] + currentrot
-    print("MOVEL TargetPos Heaven after Place")
     rtde_control.moveL(target_heaven, speed=slow)
     jointangles = rtde_receive.getActualQ()
     jointangles[5] = initialjoint
-    print("MOVEJ Return to initial orientation")
     rtde_control.moveJ(jointangles)
 
 
@@ -307,7 +306,7 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
 def main():
     """
     Main script loop
-    """   
+    """
     circuit_schematic = determine_schematic()
     grab_nozzle()
     circuit_pick_and_place(circuit_schematic, print_log=False)
