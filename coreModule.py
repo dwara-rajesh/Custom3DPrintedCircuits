@@ -76,7 +76,7 @@ def read_tray_indexes():
         for line in lines:
             part, idx = line.replace("\n", "").split('-')
             tray_data[part] = int(idx)
-    
+
     f.close()
     return tray_data
 
@@ -85,7 +85,7 @@ def write_tray_indexes(tray_data):
     """
     Writes indexes from the tray data to the tray data file for storage
     """
-    
+
     with open(COMPONENT_TRAY_FILEPATH, 'w') as f:
         for part in tray_data:
             f.write(part + '-' + str(tray_data[part]) + '\n')
@@ -96,7 +96,7 @@ def reset_tray_indexes():
     """
     Resets all tray-data indexes to zero
     """
-    
+
     tray_data = read_tray_indexes()
     for part in tray_data:
         tray_data[part] = 0
@@ -114,19 +114,19 @@ def load_calibration_data():
     """
 
     data = None
-    
+
     # Open the CSV file in read mode
     with open(CALIBRATION_FILEPATH, 'r') as f:
         # Create a reader object
         reader = csv.reader(f)
-        
+
         # Iterate through the rows in the CSV file
         for row in reader:
             # Access each element in the row
             data = row
-    
-    
-    
+
+
+
     # Check that data appears valid, and load it:
     if data is not None:
         if len(data) != 6:
@@ -151,7 +151,7 @@ def print_robot_pos():
     """
     Prints the current robot position in the console output
     """
-    
+
     print("\n\n\n\n\n\n\n\n\n\n\n")
     print("===============================================================================================================================================")
     print(get_robot_pos())
@@ -166,7 +166,7 @@ def open_grabber(wait=1.0):
     time.sleep(wait)
     rtde_io.setStandardDigitalOut(0, False)
     time.sleep(wait)
-    
+
 
 def close_grabber(wait=1.0):
     """
@@ -196,7 +196,7 @@ def open_vice(wait=1.0):
     time.sleep(wait)
     rtde_io.setStandardDigitalOut(1, False)
     time.sleep(wait)
-    
+
 
 def close_vice(wait=1.0):
     """
@@ -212,7 +212,7 @@ def set_pressure(pressure):
     """
     Configures the Alicat regulator to the requested pressure
     """
-    
+
     hex_string = hex(struct.unpack('<I', struct.pack('<f', pressure))[0])
     while len(hex_string) < 2+8: #The hexcode should be length 2+8 ex: 0x00000000. Padd with zeroes as needed
         hex_string += '0'
@@ -226,8 +226,8 @@ def get_pressure():
     """
     Reads the current pressure from the Alicat regulator
     """
-    
-    try: 
+
+    try:
         rr = client.read_input_registers(1202, 2, unit=1) #this used to say unit=1 instead of slave =1.  Changed do to error message: TypeError: ModbusClientMixin.read_input_registers() got an unexpected keyword argument 'unit'
     except ModbusException as exc:
         return -1
@@ -238,7 +238,7 @@ def vacuum_on(delay=0.5, log=False):
     """
     Turns on the vacuum suction on the pick-and-place nozzle
     """
-    set_pressure(0.1) 
+    set_pressure(0.1)
     while get_pressure() >= 12.0:
         set_pressure(0.1)
         time.sleep(0.1)
@@ -255,7 +255,7 @@ def vacuum_off(delay=0.5, log=False):
     """
     Turns off the vacuum suction on the pick-and-place nozzle
     """
-    set_pressure(ATMOSPHERE) 
+    set_pressure(ATMOSPHERE)
     rtde_io.setStandardDigitalOut(vac_IO, False)
 
     # If log is set to True, print status message
@@ -294,9 +294,9 @@ def ink_on():
 def ink_off():
     """
     Stops extruding ink with the syringe
-    """ 
+    """
     rtde_io.setStandardDigitalOut(ink_IO, False)
-    
+
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------
 # === # Functions to control the robot in table coordinates # === #
@@ -305,8 +305,7 @@ def ink_off():
 table_offsets = [-9.52, -125.93, 1+3.45] # All units in millimeters! NOT meters! (Z=0 at 1mm above table for safety)
 
 
-# def goto_pos(pos, speed=precise, accel=ACCELERATION):Juan
-def goto_pos(pos,rot=[0.0, 3.1415, 0.0], speed=precise, accel=ACCELERATION): #me
+def goto_pos(pos,rot=[0.0, 3.1415, 0.0], speed=precise, accel=ACCELERATION):
     """
     Moves nozzle tip to indicated [X,Y,Z] TABLE coordinates accounting
     for calibration data, at given speed. Uses precise speed by default.
@@ -319,7 +318,7 @@ def goto_pos(pos,rot=[0.0, 3.1415, 0.0], speed=precise, accel=ACCELERATION): #me
     # If the calibration data is not loaded, load it!
     if CALIBRATION_DATA['vac'] is None:
         load_calibration_data()
-    
+
     # Adjust pos with table offsets
     table_pos = [pos[x] + table_offsets[x] for x in range(3)]
 
@@ -327,9 +326,7 @@ def goto_pos(pos,rot=[0.0, 3.1415, 0.0], speed=precise, accel=ACCELERATION): #me
     real_pos = [table_pos[x]/1000.0 + CALIBRATION_DATA['vac'][x] for x in range(3)]
 
     # Add rotation coordinates to final position vector
-    # real_pos = real_pos + [0.0, 3.1415, 0.0] # Tool rotation is fixed to vertical #Juan
-    real_pos = real_pos + rot #me
-
+    real_pos = real_pos + rot
     # Move there!
     rtde_control.moveL(real_pos, speed=speed, acceleration=accel)
 
@@ -346,7 +343,7 @@ def get_pos():
 
     # Extract real XYZ coordinates
     real_pos = [x for x in get_robot_pos()][0:3]
-    
+
     # Adjust pos with calibration data and convert to millimeters
     calibrated_pos = [(real_pos[x] - CALIBRATION_DATA['vac'][x])*1000 for x in range(3)]
 
@@ -376,20 +373,20 @@ def grab_nozzle():
     Assumes gripper is not already holding something!! If it is, the robot will
     drop it!
     """
-    
+
     # Move to nozzle location
     rtde_control.moveL(nearNozzle, speed=fast)
 
     # If grabber is closed, open it to avoid crashing!
     if rtde_receive.getDigitalOutState(0) == True:
         open_grabber(0.1)
-    
+
     # Move to tool pickup waypoint
     rtde_control.moveL(atNozzle, speed=slow)
-    
+
     # Grab nozzle (Close grabber)
     close_grabber(wait=wait_time)
-    
+
     # Lift nozzle out of rack and move to standby
     rtde_control.moveL(liftNozzle, speed=precise)
     rtde_control.moveL(standby, speed=fast)
@@ -402,17 +399,17 @@ def return_nozzle(skip_standby=False):
     Can be instructed to skip the final move to standby to optimize
     pathing and speed when swapping from one tool to another.
     """
-    
+
     # Turn off vacuum if it is not already
     vacuum_off()
 
     # Move to rack location and lower nozzle into place
     rtde_control.moveL(liftNozzle, speed=fast)
     rtde_control.moveL(atNozzle, speed=precise)
-    
+
     # Release nozzle (Open grabber)
     open_grabber(wait=wait_time)
-    
+
     # Lift nozzle out of rack and move to standby (unless otherwise specified)
     rtde_control.moveL(nearNozzle, speed=slow)
     if skip_standby != True:
@@ -425,20 +422,20 @@ def grab_inkprinter():
     Assumes gripper is not already holding something!! If it is, the robot will
     drop it!
     """
-    
+
     # Move to nozzle location
     rtde_control.moveL(nearPrinter, speed=fast)
 
     # If grabber is closed, open it to avoid crashing!
     if rtde_receive.getDigitalOutState(0) == True:
         open_grabber(0.1)
-    
+
     # Move to tool pickup waypoint
     rtde_control.moveL(atPrinter, speed=slow)
-    
+
     # Grab nozzle (Close grabber)
     close_grabber(wait=wait_time)
-    
+
     # Lift nozzle out of rack and move to standby
     rtde_control.moveL(liftPrinter, speed=precise)
     rtde_control.moveL(standby, speed=fast)
@@ -454,7 +451,7 @@ def return_inkprinter(skip_standby=False):
     Can be instructed to skip the final move to standby to optimize
     pathing and speed when swapping from one tool to another.
     """
-    
+
     # Reset the air line back to atmospheric pressure if it is not already and stop all printing
     ink_off()
     set_pressure(ATMOSPHERE)
@@ -462,10 +459,10 @@ def return_inkprinter(skip_standby=False):
     # Move to rack location and lower nozzle into place
     rtde_control.moveL(liftPrinter, speed=fast)
     rtde_control.moveL(atPrinter, speed=precise)
-    
+
     # Release nozzle (Open grabber)
     open_grabber(wait=wait_time)
-    
+
     # Lift nozzle out of rack and move to standby
     rtde_control.moveL(nearPrinter, speed=slow)
     if skip_standby != True:
@@ -498,14 +495,14 @@ def freedrive_mode():
     keeping the Z axis and tool rotation locked. Very useful for calibrating
     waypoints on the table. Be sure to move the robot to an appropriate Z
     height before turning freedrive on!
-    
+
     Currently set up to stay in freedrive until the X calibration sensor is triggered
     Triggering the Y calibration sensor causes the robot's current position to be
     printed out to the console (In table coordinates [mm])
 
     ONLY WORKS ON ROBOTS WITH FIRMWARE VERSION 5.10 OR GREATER
     """
-    
+
     # Enable freedrive
     print("X-Y Freedrive Enabled!")
     rtde_control.freedriveMode()#free_axes=[1,1,0,0,0,0]#
@@ -520,12 +517,12 @@ def freedrive_mode():
         else:
             printed = False
         time.sleep(0.1)
-        
-    
+
+
     # End freedrive
     rtde_control.endFreedriveMode()
     print("X-Y Freedrive Disabled!")
-    
+
 
 def fake_freedrive(height=100, apply_raw_force=False):
     """
@@ -558,7 +555,7 @@ def fake_freedrive(height=100, apply_raw_force=False):
             printed = False
 
         # Measure applied forces and compute force command
-        command = [0,0]        
+        command = [0,0]
         F = rtde_receive.getActualTCPForce()
         #print(F)
         if math.fabs(F[0]) > force_threshold: # Apply force in X
@@ -577,7 +574,7 @@ def fake_freedrive(height=100, apply_raw_force=False):
             wrench = F
         rtde_control.forceMode(task_frame, selection_vector, wrench, force_type, limits)
         time.sleep(0.002) # ~500Hz loop (not timed)
-    
+
     # End force mode and return robot to normal operation
     rtde_control.forceModeStop()
     print("Force-based freedrive mode disabled.")
@@ -623,14 +620,14 @@ def linear_freedrive(precision_mode=False, print_output=False):
             printed = False
 
         # Measure applied forces and compute linear speed command
-        command = [0,0]        
+        command = [0,0]
         F = rtde_receive.getActualTCPForce()
         #print(F)
         if math.fabs(F[0]) > force_threshold: # Apply force in X (within threshold and corrected for zero point)
             command[0] =+ [(F[0]-force_threshold) if F[0] >= 0 else (F[0]+force_threshold) for x in [0]][0] * gain
         if math.fabs(F[1]) > force_threshold: # Apply force in Y (within threshold and corrected for zero point)
             command[1] =+ [(F[1]-force_threshold) if F[0] >= 0 else (F[1]+force_threshold) for x in [0]][0] * gain
-        
+
         # Apply max speed threshold
         command = [x if x <= max_speed else max_speed for x in command]
         command = [x if x >= -max_speed else -max_speed for x in command]
@@ -640,7 +637,7 @@ def linear_freedrive(precision_mode=False, print_output=False):
         if print_output == True:
             print("F, C, S: ", [round(x,3) for x in F[0:3]], command, speeds)
         rtde_control.speedL(xd=speeds, acceleration=max_accel, time=0.002) # ~500kHz loop (not timed)
-    
+
     # End force mode and return robot to normal operation
     rtde_control.speedStop(a=max_accel)
     print("Force-based linear freedrive mode disabled.")
@@ -725,7 +722,7 @@ def point_capture():
     If performing point capture from the table POV, set the inverted
     parameter to False in manual_control()
     """
-    
+
     goto_pos([0,0,100], speed=fast)
     goto_pos([0,0,30], speed=precise)
     goto_pos([0,0,1], speed=micrometric)
