@@ -11,35 +11,44 @@ from coreModule import *
 # === # Pick-And-Place Code # === #
 
 PRESSURE_THRESHOLD = 6.0 # If vacuum is on, and pressure reading is below this, an object has been picked up!
-admlviceblock_yoff = 0.486 / 39.37 #convert in to m
-z_origin_offset_from_sensor = 1.747 / 39.37 #convert in to m
 
 load_calibration_data()
-z_origin = CALIBRATION_DATA['vac'][2] + z_origin_offset_from_sensor
-origin_in_m = [0.2765406784535635,-0.3373023151065945-admlviceblock_yoff,z_origin, 0, math.pi, 0] #top right corner of stock on vice in rosie station
+z_origin = CALIBRATION_DATA['vac'][2] + top_right_vise[2]
+origin_in_m = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_origin, 0, math.pi, 0] #top right corner of stock on vice in rosie station
 origin = [val * 1000 for val in origin_in_m[:3]] + [0,math.pi,0] #origin in mm
 tip_offset_from_gripper = 1.1705 * 25.4 #convert in to mm
 pickupfailed = False
+pickedup = False
+
+# Placeholder for component stock index tracking (To account for depletion of tray components)
+placed_components = {"battery": [],
+                        "microcontroller": [],
+                        "button": [],
+                        "led": []}
 # Position data (In table coordinates) of the electronic component tray grids (Only XY coordinates)
 COMPONENTS = {'battery': {'start': [91.87, 50.15],   # XY coords of the start of the grid (Bottom left corner)
                             'end': [142.33, 100.72], # XY coords of the end of the grid (Top right corner)
                            'grid': (3, 3),           # Grid dimensions (3x3)
                       'threshold': 9.5,              # Pressure threshold for pickup
+                   'pocket_depth': 0.082,            # Depth of pocket in tray (in inches)
                           'z_val': 0.0},             # Height offset for pick up (Active pressure feedback pickup starts at this height)
                   'led': {'start': [22.55, 66.63],
                             'end': [67.39, 106.07],
                            'grid': (4, 5),           # Grid dimensions (4x5)
-                      'threshold': 10.65,
+                      'threshold': 10.8, #MESS AROUND WITH THIS
+                   'pocket_depth': 0.1, #MESS AROUND WITH THIS
                           'z_val': 0.0},
                'button': {'start': [29.7, 13.95],
                             'end': [60.45, 50.25],
                            'grid': (2, 4),           # Grid dimensions (2x4)
                       'threshold': 9.7,
+                   'pocket_depth': 0.2,
                           'z_val': 1.0},
       'microcontroller': {'start': [101.84, 19.98],
                             'end': [139.93, 19.98],
                            'grid': (2, 1),           # Grid dimensions (2x1)
                       'threshold': 9.5,
+                   'pocket_depth': 0.124,
                           'z_val': -1.0}}
 
 # get recent save data
@@ -139,14 +148,14 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
     pressure monitoring pickup approach.
     """
     global pickupfailed
+    global pickedup
+    global placed_components
     heaven = 54.0 # Z coordinate above part pick up location to move component to
     step = 0.01 # In mm
 
     #vertical_clearance = -1.0 # In mm - TO DECREASE PROCESS TIME SET VALUE TO -2mm IF USING STANDARD AMBER NOZZLE
     #if component == 'switch':
     #    vertical_clearance -= 2 # Pick up switches from lower height to save time
-
-    max_wait = 15 # The nozzle wll retract anyway if the pressure does not drop below threshold in this time (s)
 
     PRESSURE_THRESHOLD = COMPONENTS[component]['threshold'] # Component-specific pressure threshold for pickup
     MAX_FORCE = 30 # Max force to be applied by the nozzle if no pressure drop is detected
@@ -162,20 +171,21 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
     # Slowly step downwards monitoring the vacuum pressure
     vacuum_on() # Turn vacuum on if it is not already
     print("Vacuum On")
-    starttime = time.time()
-    while time.time() - starttime < max_wait and get_pressure() > PRESSURE_THRESHOLD: # True when object not yet picked up
+
+    depth_travelled_into_grid = abs(initial_pos[2] - target_pos[2]) #in mm
+    while get_pressure() > PRESSURE_THRESHOLD and depth_travelled_into_grid < (COMPONENTS[component]['pocket_depth'] * 25.4): # True when object not yet picked up
         nozzle_forces = rtde_receive.getActualTCPForce()
         if nozzle_forces[2] <= MAX_FORCE: # Check to ensure that if the vacuum fails, we still stop the nozzle safely!
             target_pos[2] -= step
+            depth_travelled_into_grid = abs(initial_pos[2] - target_pos[2])
             goto_pos(target_pos, speed=micrometric)
         else:
             if keyboard.is_pressed('ctrl'): # Ctrl key can be used to break out of loop if pickup fails
                 break
             if print_warnings == True:
                 print("Pick-and-Place nozzle WARNING: Max force exceeded!")
-    # Check if max wait has been exceeded:
-    if time.time() - starttime >= max_wait:
-        print("Pick-and-Place nozzle WARNING: Wait time exceeded!")
+    if depth_travelled_into_grid >= (COMPONENTS[component]['pocket_depth'] * 25.4):
+        print("Pick-and-Place nozzle WARNING: Max depth inside grid pocket reached!")
     if get_pressure() > PRESSURE_THRESHOLD:
         print(f"Pick N Place: Failed to pickup {component} in slot #{index + 1}, moving to next slot to attempt pickup")
         index += 1
@@ -186,8 +196,10 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
         else:
             vacuum_off()
             print("Vacuum  Off")
+            placed_components[component].append(index)
             target_pos = pickup_component(component=component, index=index)
     else:
+        pickedup = True
         print(f"Pick N Place: Picked up [{component}] from slot [{index + 1}]")
 
     if pickupfailed:
@@ -195,12 +207,15 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
         pass
     else:
         # Assuming the pressure drop means the object was picked up, move the nozzle up to pick the component out of the tray
-        heaven_pos = initial_pos.copy()
-        heaven_pos[2] = heaven
-        time.sleep(1) # Small delay to allow vacuum to set in before lifting component
-        goto_pos(heaven_pos)
+        if pickedup:
+            placed_components[component].append(index)
+            pickedup = False
+            heaven_pos = initial_pos.copy()
+            heaven_pos[2] = heaven
+            time.sleep(1) # Small delay to allow vacuum to set in before lifting component
+            goto_pos(heaven_pos)
 
-    return pickupfailed, index
+    return pickupfailed
 
 def place_component(target_pos,rot, heaven=0.4318552510405578):#100):
     """
@@ -246,14 +261,9 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
     Performs Pick-and-Place assembly of all the components specified in the input schematic
     """
     global pickupfailed
+    global placed_components
     if print_log == True:
         print("Pick-and-Place - Schematic assembly started...")
-
-    # Placeholder for component stock index tracking (To account for depletion of tray components)
-    placed_components = {"battery": [],
-                         "microcontroller": [],
-                         "button": [],
-                         "led": []}
 
     if print_log == True:
         print("Pick-and-Place - Closing and cycling vice...")
@@ -286,7 +296,7 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
         else:
             if print_log == True:
                 print(f"Pick-and-Place: {part_num}/{len(schematic)}\nPicking up {component['type']} #{index + 1} from {component['type']} inventory grid")
-            pickup, ind = pickup_component(component['type'], index)
+            pickup = pickup_component(component['type'], index)
             if pickup:
                 print(f"ComponentInventory ERROR: {component['type']} inventory is empty! Please refill")
             else:
@@ -295,7 +305,6 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
                 tagretpos = [x/1000 for x in component['pos']]
                 print(tagretpos)
                 place_component(tagretpos, component['rot'])
-                placed_components[component['type']].append(ind)
                 part_num += 1
 
     # Return to standby

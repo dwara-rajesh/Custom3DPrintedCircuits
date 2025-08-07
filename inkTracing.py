@@ -9,11 +9,10 @@ import rtde_receive
 import rtde_control
 import keyboard
 from math import pi
+import json,os
 
 # Import core module:
 from coreModule import *
-# Import modular code from Pick-and-Place file
-from pickAndPlace import *
 
 # Ink printing extrusion parameters
 PRINT_SPEED = 0.1 # [m/s] Linear speed of the printer head when extruding ink - Original value: 0.15m/s
@@ -126,6 +125,10 @@ SUBSTRATE = {'start': [-155.8, 31.64], # X and Y Coordinates for the start and e
                'end': [-87.64, 72.74],
              'level': 38.5} # Height level just above substrate surface
 
+load_calibration_data()
+z_origin_ink = CALIBRATION_DATA['ink'][2] + top_right_vise[2]
+origin_in_m_ink = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_origin_ink, 0, math.pi, 0] #top right corner of stock on vice in rosie station
+origin_ink = [val * 1000 for val in origin_in_m_ink[:3]] + [0,math.pi,0] #origin in mm
 
 def clear_tip(delay=1.0):
     """
@@ -138,49 +141,39 @@ def clear_tip(delay=1.0):
     time.sleep(delay)
     ink_off()
 
+def get_most_recent_saved_file(folder):
+    files = [os.path.join(folder, f) for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+    if not files:
+        return None
+    return max(files, key=os.path.getctime)
 
-def assemble_traces(schematic):
+def get_traces():
     """
     Takes a schematic of print traces in offset format and calculates all the waypoints
     for the ink print head given the origin position.
     Returns a dictionary of traces for printing. (Preserving IDs)
     """
-    
-    assembled_traces = {}
-    origin = schematic['origin']
+    # savefolderpath = os.path.join(os.getcwd(),"saves")
+    # recentsavefilepath = get_most_recent_saved_file(savefolderpath)
+    # recentsavefilepath = r"C:\git\ADML\Automated Circuit Printing and Assembly\finalSendToMill.json"
+    recentsavefilepath = r"Automated Circuit Printing and Assembly/finalSendToMill.json"
+    print(f"Save file path: {recentsavefilepath}")
+    with open(recentsavefilepath, 'r') as f:
+        data = json.load(f)
 
-    # Iterate over all segments and construct traces
-    for segment in schematic['segments']:
-        trace = []
-        for line in schematic['segments'][segment]:
-            x_point = round(origin[0]+line[0], 3)
-            y_point = round(origin[1]+line[1], 3)
-            z_point = round(origin[2]+line[2], 3)
-            trace.append([x_point, y_point, z_point])
-        assembled_traces[segment] = trace
-    
-    return assembled_traces
+    wiring_schematic = []
+    for wire in data['wiresdata']:
+        nodes = []
+        for node in wire['wireNodesdata']:
+            nodeX = (origin_ink[0] + (node['posX'] * 25.4)) / 1000
+            nodeY = (origin_ink[1] + (node['posY'] * 25.4)) / 1000
+            nodeZ = origin_ink[2] / 1000
 
+            nodes.append([nodeX,nodeY,nodeZ])
+        wiring_schematic.append(nodes)
 
-def assemble_squares(schematic):
-    """
-    Takes a schematic of print squares in offset format and calculates all the waypoints
-    for the ink print head given the origin position.
-    Returns a dictionary of square data for printing. (Preserving IDs)
-    """
+    return wiring_schematic
 
-    assembled_squares = {}
-    origin = schematic['origin']
-
-    for square in schematic['squares']:
-        sq_start = schematic['squares'][square][0]
-        actual_start = [round(origin[0]+sq_start[0],3), round(origin[1]+sq_start[1],3)]
-        sq_end = schematic['squares'][square][1]
-        actual_end = [round(origin[0]+sq_end[0],3), round(origin[1]+sq_end[1],3)]
-        sq_level = schematic['squares'][square][2] + origin[2]
-        assembled_squares[square] = [actual_start, actual_end, sq_level]
-    
-    return assembled_squares
 
 
 def print_trace(trace, print_speed=PRINT_SPEED, print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY,
@@ -216,36 +209,11 @@ def print_trace(trace, print_speed=PRINT_SPEED, print_pressure=PRINT_PRESSURE, p
     time.sleep(primer_delay)
     for coord in trace[1::]: # Skip the first coord since we are already there
         goto_pos(coord[:2] + [coord[2]+vertical_clearance], speed=print_speed, accel=PRINT_ACCEL)
-    
+
     # One the trace is finished, stop printing and return to heaven height
     ink_off()
     clear_tip(delay=0.5) # Prevent stringing
     goto_pos(trace[-1][:2] + [trace[-1][2]+heaven])
-
-
-def print_demo(dry_run=False):
-    """
-    Executes the full printing sequence for the demo circuit
-    Can be run in dry mode, which performs the sequence but does not print any ink
-    """
-
-    # Setup sequence and grab printing tool
-    grab_inkprinter()
-    close_vice()
-    
-    # Slow print speed down if doing a dry run
-    speed = PRINT_SPEED
-    if dry_run == True:
-        speed = 0.005
-
-    # Print the traces
-    TRACES = assemble_traces(DEMO_PRINT)
-    for traceID in ['bat-led', 'led-swt', 'swt-bat']:
-        print_trace(TRACES[traceID], print_speed=speed, dry_print=dry_run)
-    
-    # Finish sequence and return printing tool
-    return_inkprinter()
-
 
 def print_quality_test(type='pressure', dry_run=False):
     """
@@ -290,7 +258,7 @@ def print_meander(k=10, dry_run=False):
     """
     Prints a test meander trace on an empty flat substrate piece
     Uses default speed and pressure
-    
+
     'k' is the pitch of the meander (How many S-turns the meander will have)
     """
 
@@ -308,7 +276,7 @@ def print_meander(k=10, dry_run=False):
             meander.append([SUBSTRATE['start'][0]+(dx*idx), SUBSTRATE['end'][1], SUBSTRATE['level']])
             meander.append([SUBSTRATE['start'][0]+(dx*idx), SUBSTRATE['start'][1], SUBSTRATE['level']])
             direction = 0
-    
+
     # Print the constructed trace
     print_trace(meander, dry_print=dry_run)
 
@@ -318,7 +286,7 @@ def prime_ink():
     Primes the ink extruder by extruding a short length of ink to ensure
     that the ink has flowed all throughout the nozzle
     """
-    
+
     set_pressure(PRINT_PRESSURE)
     time.sleep(5)
     ink_on()
@@ -326,93 +294,19 @@ def prime_ink():
     ink_off()
     set_pressure(ATMOSPHERE)
 
-
-def print_square(sq_start, sq_end, sq_Z, dx=0.86, dry_run=False):
-    """
-    Prints a square of ink using a meander path, with given corners.
-    Square coordinates should be given as [start, end, Z] where 'start' 
-    is the bottom left corner XY coords, 'end' is the top right corner 
-    XY coords and Z is the height at which to print the square.
-
-    If the square dimensions are not an integer multiple of the step size (dx)
-    the square will be undersized to fit to avoid collisions!
-
-    default value for dx = 0.86 # Pitch of the square meander in mm
-    (should be ~90% of the trace width)
-    """
-
-    k = math.floor((sq_end[0] - sq_start[0]) / dx)
-
-    # Construct trace from substrate parameters
-    meander = []
-    direction = 0 # Flag variable to keep track of direction
-    for idx in range(k):
-        if direction == 0: # Bottom to top
-            meander.append([sq_start[0]+(dx*idx), sq_start[1], sq_Z])
-            meander.append([sq_start[0]+(dx*idx), sq_end[1], sq_Z])
-            direction = 1
-        elif direction == 1: # Top to bottom
-            meander.append([sq_start[0]+(dx*idx), sq_end[1], sq_Z])
-            meander.append([sq_start[0]+(dx*idx), sq_start[1], sq_Z])
-            direction = 0
-    
-    # Print the constructed trace
-    print_trace(meander, print_speed=PRINT_SPEED_SLOW, dry_print=dry_run)
-
-
-def print_arc(center, radius, arc_angles, dry_run=False):
-    """
-    Prints an arc-shaped trace (Used as battery anchor to help adhere it to the substrate)
-    Arc is flat along XY plane, centered at given XYZ coordinates, with given radius
-    Arc spans the angle range given as [start, end] where 0 represents +X direction:
-        0 = +X
-     pi/2 = +Y
-       pi = -X
-    3pi/2 = -Y
-    An example range may be [3pi/4, pi/4] which draws an arc from 10:30 to 1:30
-    (A 3/4 of a full circle arc with missing quarter on the top)
-    If both angles are the same, a full circle will be printed
-    """
-
-    resolution = 30
-
-    # If the second angle is smaller or equal than the first, add 2pi to it
-    if arc_angles[1] <= arc_angles[0]:
-        arc_angles[1] += 2*pi
-    
-    # Iterate through angle range to compute arc coordinates
-    arc = []
-    dt = (arc_angles[1] - arc_angles[0]) / resolution
-    theta = arc_angles[0]
-    for i in range(resolution):
-        x = math.cos(theta) * radius
-        y = math.sin(theta) * radius
-        arc.append([center[0]+x, center[1]+y, center[2]])
-        theta += dt
-
-    # Print arc trace
-    print_trace(arc, print_speed=PRINT_SPEED_SLOW, dry_print=dry_run)
-
-
-def print_conductivity_sample(dry_run=False):
-    """
-    Prints a square ink sample on a piece of substrate to measure ink conductivity
-    using a 4-probe conductivity test.
-
-    Sample is 24.080.mm x 24.08mm
-    """
-
-    Z_level = 39.8
-    dimensions = [24.08, 24.08]
-
-    origin = [-134.10, 53.24] # Hardcoded due to use of special substrate piece
-
-    square_start = [origin[0], origin[1]]
-    square_end = [origin[0]+dimensions[0], origin[1]+dimensions[1]]
-
-    print_square(square_start, square_end, Z_level, dry_run=dry_run)
-
-
+def move_to_node(pos, index, maxindex):
+    nodepos = pos + [0,pi,0]
+    if index == 0:
+        rtde_control.moveL(nodepos, speed=0.005)
+        #extrude ink
+        #draw ball for firm connection
+    elif index == maxindex:
+        #extrude ink
+        rtde_control.moveL(nodepos, speed=0.005)
+        #draw ball for firm connection
+    else:
+       #extrude ink
+        rtde_control.moveL(nodepos, speed=0.005)
 #-----------------------------------------------------------------------------------------------------------
 # === # Ink Trace Printing Code # === #
 
@@ -421,35 +315,13 @@ def main():
     """
     Main script loop
     """
-
-    #print_demo(dry_run=True)
+    wire_schematic = get_traces()
+    grab_inkprinter()
+    for wire in wire_schematic:
+        for i,node in enumerate(wire):
+            move_to_node(node,i,len(wire) - 1)
     
-    #print_demo()
-
-    prime_ink()
-
-    #grab_inkprinter()
-    #close_vice()
-    #time.sleep(5)
-    
-    #print_quality_test(type='speed', dry_run=False) #!!!
-    #print_quality_test(type='pressure', dry_run=False)
-    #open_vice()
-    
-    #manual_control()
-
-    #print_meander(dry_run=True)
-    #SUBSTRATE['level'] -= 0.5
-    #print_meander()
-
-    #print_quality_test(type='delay', dry_run=False)
-
-    #return_inkprinter()
-
-    #grab_inkprinter()
-    #time.sleep(2)
-    #print_conductivity_sample(dry_run=False)
-    #return_inkprinter()
+    return_inkprinter()
 
 
 if __name__ == "__main__":
