@@ -217,7 +217,7 @@ def meander_terminal(centre, component, k=3):
                 next_x = start_x
             else:
                 next_x = end_x
-    
+
     rtde_control.moveL(centre,speed=0.005)
 
 def reinforce_connection():
@@ -226,6 +226,7 @@ def reinforce_connection():
             if i==0 or i==len(wire) - 1:
                 nodepos = node['pos']+[0,pi,0]
                 meander_terminal(nodepos, node['comp'])
+
 def prime_ink():
     """
     Primes the ink extruder by extruding a short length of ink to ensure
