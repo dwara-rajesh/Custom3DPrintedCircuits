@@ -121,15 +121,18 @@ SWT - BAT
 06 -     0.0    0.0   +2.80
 """
 
-SUBSTRATE = {'start': [-155.8, 31.64], # X and Y Coordinates for the start and end points of the printable area of the substrate (with margins)
-               'end': [-87.64, 72.74],
-             'level': 38.5} # Height level just above substrate surface
 
 load_calibration_data()
 z_origin_ink = CALIBRATION_DATA['ink'][2] + top_right_vise[2]
 origin_in_m_ink = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_origin_ink, 0, math.pi, 0] #top right corner of stock on vice in rosie station
 origin_ink = [val * 1000 for val in origin_in_m_ink[:3]] + [0,math.pi,0] #origin in mm
 
+#in inches
+meander_square_size = {"battery":0.01,
+                  "microcontroller":0.035,
+                  "button":0.01,
+                  "led":0.035}
+wire_schematic = []
 def clear_tip(delay=1.0):
     """
     Applies a vacuum to the ink nozzle for a short time to prevent leftover pressure
@@ -165,128 +168,69 @@ def get_traces():
     for wire in data['wiresdata']:
         nodes = []
         for node in wire['wireNodesdata']:
+            if node['component'] is None:
+                component = "empty"
+            else:
+                component = node['component']
+
             nodeX = (origin_ink[0] + (node['posX'] * 25.4)) / 1000
             nodeY = (origin_ink[1] + (node['posY'] * 25.4)) / 1000
             nodeZ = origin_ink[2] / 1000
 
-            nodes.append([nodeX,nodeY,nodeZ])
+            nodes.append({"pos":[nodeX,nodeY,nodeZ], "comp": component})
         wiring_schematic.append(nodes)
 
     return wiring_schematic
 
-
-
-def print_trace(trace, print_speed=PRINT_SPEED, print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY,
-                dry_print=False, skip_hover=False):
-    """
-    Prints a single multi-point conductive trace using the printing head
-
-    Traces are arrays of 3D table coordinates, and the printing process
-    simply moves from the beggining to the end coordinate in order, while
-    extruding ink at constant rate. Hence a single trace can have complex
-    3-dimensional shapes, but must be continuous.
-
-    If dry_print is set to TRUE, no ink will be extruded but the line path
-    will still be traced normally. This is useful for testing that a path
-    is correct before commiting to printing actual ink.
-    """
-
-    heaven = 15.0 # Z coordinate above trace height to enter and exit the trace at
-    vertical_clearance = 0.2 # In mm (Can be used to adjust the vertical offset when printing)
-
-    # Set printing pressure:
+def printink(terminal_pos, terminal_component,print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY,
+                dry_print=True):
     if dry_print == True:
         set_pressure(ATMOSPHERE)
     else:
         set_pressure(print_pressure)
 
-    # Go to trace start coordinates and begin printing
-    if skip_hover != True: # By default, nozzle moves to trace location at heaven height, and then lowers onto it (This can be skipped)
-        goto_pos(trace[0][:2] + [trace[0][2]+heaven]) # Compact way of just adding heaven value onto last coordinate without altering original coord array
-    goto_pos(trace[0])
-    ink_on() # Begin printing
-
+    ink_on()
     time.sleep(primer_delay)
-    for coord in trace[1::]: # Skip the first coord since we are already there
-        goto_pos(coord[:2] + [coord[2]+vertical_clearance], speed=print_speed, accel=PRINT_ACCEL)
 
-    # One the trace is finished, stop printing and return to heaven height
-    ink_off()
-    clear_tip(delay=0.5) # Prevent stringing
-    goto_pos(trace[-1][:2] + [trace[-1][2]+heaven])
+    meander_terminal(terminal_pos,terminal_component)
 
-def print_quality_test(type='pressure', dry_run=False):
-    """
-    Prints several horizontal lines in a substrate part at varying speeds or pressures to
-    visually determine which printing pressure works best with the current ink
-    """
+def meander_terminal(centre, component, k=3):
+    start_x = centre[0] - (meander_square_size[component]/39.37)
+    start_y = centre[1] - (meander_square_size[component]/39.37)
 
-    pressure_range = [45,80] # Pressure range used when testing pressure
-    speed_range = [0.03,0.20] # Speed range used when testing speed
-    delay_range = [0.040,0.600] # Primer delay range used when testing primer delay
+    end_x = centre[0] + (meander_square_size[component]/39.37)
+    end_y = centre[1] + (meander_square_size[component]/39.37)
 
-    lines = 8 # Number of different lines to print (In other words, number of different pressures to test)
+    y_step = ((end_y - start_y) / k)
 
-    line_start = SUBSTRATE['start'][0]
-    line_end = SUBSTRATE['end'][0]
+    startpos = [start_x,start_y,centre[2],centre[3],centre[4],centre[5]]
+    rtde_control.moveL(startpos,speed=0.005)
+    next_x = end_x
+    next_y = start_y
+    for i in range(k*2):
+        endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]]
+        rtde_control.moveL(endpos,speed=0.005)
+        if i % 2 == 0:
+            next_y = next_y + y_step
+        else:
+            if next_x == end_x:
+                next_x = start_x
+            else:
+                next_x = end_x
+    
+    rtde_control.moveL(centre,speed=0.005)
 
-    dy = (SUBSTRATE['end'][1] - SUBSTRATE['start'][1]) / (lines - 1)
-
-    trace_data = [[line_start, SUBSTRATE['start'][1], SUBSTRATE['level']],
-                  [line_end, SUBSTRATE['start'][1], SUBSTRATE['level']]]
-    for idx in range(lines):
-        # Print trace with correct speed and pressure paramters
-        if type == 'pressure': # Lines will have varying pressure values and default speed:
-            pressure = idx * ((pressure_range[1]-pressure_range[0]) / (lines - 1)) + pressure_range[0]
-            print("Printing test trace #[" + str(idx+1) + "] - Pressure: " + str(round(pressure)) + "psi")
-            print_trace(trace=trace_data, print_pressure=pressure, dry_print=dry_run)
-        if type == 'speed': # Lines will have verying speed values and default pressure
-            speed = idx * ((speed_range[1]-speed_range[0]) / (lines - 1)) + speed_range[0]
-            print("Printing test trace #[" + str(idx+1) + "] - Speed: " + str(round(speed, 2)) + "m/s")
-            print_trace(trace=trace_data, print_speed=speed, dry_print=dry_run)
-        if type == 'delay':
-            delay = idx * ((delay_range[1]-delay_range[0]) / (lines - 1)) + delay_range[0]
-            print("Printing test trace #[" + str(idx+1) + "] - Primer delay: " + str(round(delay*1000)) + "ms")
-            print_trace(trace=trace_data, primer_delay=delay, dry_print=dry_run)
-
-        # Update trace coordinates for next line:
-        trace_data[0][1] += dy
-        trace_data[1][1] += dy
-
-
-def print_meander(k=10, dry_run=False):
-    """
-    Prints a test meander trace on an empty flat substrate piece
-    Uses default speed and pressure
-
-    'k' is the pitch of the meander (How many S-turns the meander will have)
-    """
-
-    dx = (SUBSTRATE['end'][0] - SUBSTRATE['start'][0]) / (k - 1)
-
-    # Construct trace from substrate parameters
-    meander = []
-    direction = 0 # Flag variable to keep track of direction
-    for idx in range(k):
-        if direction == 0: # Bottom to top
-            meander.append([SUBSTRATE['start'][0]+(dx*idx), SUBSTRATE['start'][1], SUBSTRATE['level']])
-            meander.append([SUBSTRATE['start'][0]+(dx*idx), SUBSTRATE['end'][1], SUBSTRATE['level']])
-            direction = 1
-        elif direction == 1: # Top to bottom
-            meander.append([SUBSTRATE['start'][0]+(dx*idx), SUBSTRATE['end'][1], SUBSTRATE['level']])
-            meander.append([SUBSTRATE['start'][0]+(dx*idx), SUBSTRATE['start'][1], SUBSTRATE['level']])
-            direction = 0
-
-    # Print the constructed trace
-    print_trace(meander, dry_print=dry_run)
-
-
+def reinforce_connection():
+    for wire in wire_schematic:
+        for i,node in enumerate(wire):
+            if i==0 or i==len(wire) - 1:
+                nodepos = node['pos']+[0,pi,0]
+                meander_terminal(nodepos, node['comp'])
 def prime_ink():
     """
     Primes the ink extruder by extruding a short length of ink to ensure
     that the ink has flowed all throughout the nozzle
     """
-
     set_pressure(PRINT_PRESSURE)
     time.sleep(5)
     ink_on()
@@ -294,19 +238,12 @@ def prime_ink():
     ink_off()
     set_pressure(ATMOSPHERE)
 
-def move_to_node(pos, index, maxindex):
-    nodepos = pos + [0,pi,0]
-    if index == 0:
-        rtde_control.moveL(nodepos, speed=0.005)
-        #extrude ink
-        #draw ball for firm connection
-    elif index == maxindex:
-        #extrude ink
-        rtde_control.moveL(nodepos, speed=0.005)
-        #draw ball for firm connection
+def move_to_node(pos, comp, index, maxindex):
+    if index == maxindex:
+        rtde_control.moveL(pos, speed=0.005)
+        printink(pos,comp)
     else:
-       #extrude ink
-        rtde_control.moveL(nodepos, speed=0.005)
+        rtde_control.moveL(pos, speed=0.005)
 #-----------------------------------------------------------------------------------------------------------
 # === # Ink Trace Printing Code # === #
 
@@ -317,12 +254,24 @@ def main():
     """
     wire_schematic = get_traces()
     grab_inkprinter()
+    # prime_ink()
+    # clear_tip(delay=0.5)
     for wire in wire_schematic:
         for i,node in enumerate(wire):
-            move_to_node(node,i,len(wire) - 1)
-    
-    return_inkprinter()
+            nodepos = node['pos']+[0,pi,0]
+            if i==0:
+                rtde_control.moveL(nodepos, speed=fast)
+                printink(nodepos,node['comp'])
+            else:
+                move_to_node(nodepos,node['comp'],i,len(wire) - 1)
 
+        ink_off()
+        z_heaven = wire[len(wire) - 1]['pos'][2] + 50/1000 #mm to m
+        node_heaven = [wire[len(wire) - 1]['pos'][0],wire[len(wire) - 1]['pos'][1],z_heaven] + [0,pi,0]
+        rtde_control.moveL(node_heaven, speed=slow)
+
+    # clear_tip(delay=0.5)
+    return_inkprinter()
 
 if __name__ == "__main__":
     main()

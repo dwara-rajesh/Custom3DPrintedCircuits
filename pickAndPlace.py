@@ -21,22 +21,24 @@ pickupfailed = False
 pickedup = False
 
 # Placeholder for component stock index tracking (To account for depletion of tray components)
-placed_components = {"battery": [],
-                        "microcontroller": [],
-                        "button": [],
-                        "led": []}
+placed_components = {
+    "battery": [],
+    "microcontroller": [],
+    "button": [],
+    "led": []
+    }
 # Position data (In table coordinates) of the electronic component tray grids (Only XY coordinates)
 COMPONENTS = {'battery': {'start': [91.87, 50.15],   # XY coords of the start of the grid (Bottom left corner)
                             'end': [142.33, 100.72], # XY coords of the end of the grid (Top right corner)
                            'grid': (3, 3),           # Grid dimensions (3x3)
-                      'threshold': 9.5,              # Pressure threshold for pickup
+                      'threshold': 9.7,              # Pressure threshold for pickup
                    'pocket_depth': 0.082,            # Depth of pocket in tray (in inches)
                           'z_val': 0.0},             # Height offset for pick up (Active pressure feedback pickup starts at this height)
                   'led': {'start': [22.55, 66.63],
                             'end': [67.39, 106.07],
                            'grid': (4, 5),           # Grid dimensions (4x5)
-                      'threshold': 10.8, #MESS AROUND WITH THIS
-                   'pocket_depth': 0.1, #MESS AROUND WITH THIS
+                      'threshold': 10.8,
+                   'pocket_depth': 0.1,
                           'z_val': 0.0},
                'button': {'start': [29.7, 13.95],
                             'end': [60.45, 50.25],
@@ -47,7 +49,7 @@ COMPONENTS = {'battery': {'start': [91.87, 50.15],   # XY coords of the start of
       'microcontroller': {'start': [101.84, 19.98],
                             'end': [139.93, 19.98],
                            'grid': (2, 1),           # Grid dimensions (2x1)
-                      'threshold': 9.5,
+                      'threshold': 9.9,
                    'pocket_depth': 0.124,
                           'z_val': -1.0}}
 
@@ -158,7 +160,7 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
     #    vertical_clearance -= 2 # Pick up switches from lower height to save time
 
     PRESSURE_THRESHOLD = COMPONENTS[component]['threshold'] # Component-specific pressure threshold for pickup
-    MAX_FORCE = 30 # Max force to be applied by the nozzle if no pressure drop is detected
+    MAX_FORCE = 35 # Max force to be applied by the nozzle if no pressure drop is detected
 
     # Move nozzle above component and store position
     if skip_hover != True: # By default, nozzle moves to component location at heaven height, and then lowers onto it (This can be skipped)
@@ -184,6 +186,8 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
                 break
             if print_warnings == True:
                 print("Pick-and-Place nozzle WARNING: Max force exceeded!")
+    placed_components[component].append(index)
+    inventory_management('w')
     if depth_travelled_into_grid >= (COMPONENTS[component]['pocket_depth'] * 25.4):
         print("Pick-and-Place nozzle WARNING: Max depth inside grid pocket reached!")
     if get_pressure() > PRESSURE_THRESHOLD:
@@ -196,7 +200,6 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
         else:
             vacuum_off()
             print("Vacuum  Off")
-            placed_components[component].append(index)
             target_pos = pickup_component(component=component, index=index)
     else:
         pickedup = True
@@ -208,7 +211,6 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
     else:
         # Assuming the pressure drop means the object was picked up, move the nozzle up to pick the component out of the tray
         if pickedup:
-            placed_components[component].append(index)
             pickedup = False
             heaven_pos = initial_pos.copy()
             heaven_pos[2] = heaven
@@ -312,15 +314,29 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
         print("Pick-and-Place - Assembly complete! Returning to standby...")
     rtde_control.moveL(standby, speed=fast)
 
+def inventory_management(operation):
+    inventory_file_path = r"C:\git\ADML\Automated Circuit Printing and Assembly\inventory.json"
+
+    if operation == 'r':
+        with open(inventory_file_path, operation) as f:
+            data = json.load(f)
+        for key, _ in data.items():
+            if key in placed_components:
+                placed_components[key] = data[key]
+    elif operation == 'w':
+        with open(inventory_file_path, operation) as f:
+            data = json.dump(placed_components,f)
+
 def main():
     """
     Main script loop
     """
+    time.sleep(5)
     circuit_schematic = determine_schematic()
+    inventory_management('r')
     grab_nozzle()
     circuit_pick_and_place(circuit_schematic, print_log=False)
     return_nozzle()
-
 
 if __name__ == "__main__":
     main()
