@@ -21,105 +21,15 @@ PRINT_SPEED_SLOW = 0.02
 PRINT_PRESSURE = 45 # [psi] Pressure of the pneumatic extrusion line - Original value: 70psi
 PRIMER_DELAY = 0.360 # [s] Delay in seconds that the printer waits before starting to move to allow ink time to flow through the nozzle
 PRINT_ACCEL = 0.8 # Printing uses reduced acceleration to avoid breaking the traces
+DRY_RUN = True
 
 
-# New coordinate package for the demo LED and Switch circuit:
-# This data structure helps collect all info about the traces to be printed
-# It is formatted as arrays of XYZ offsets from the same origin point
-# This origin point is specified in the 'origin' entry (In this demo, it is at the center of the battery)
-#   TODO: This would be nicer if written as a class - and merged with pick-and-place assembly data too
-DEMO_PRINT = {'origin': [-145.04, 47.35, 36.85],
-            'segments': {'bat-led-A': [[ 0.00,   0.00,  0.00],
-                                       [ 0.00,   2.97,  0.00],
-                                       [ 0.00,   7.85, -1.40],
-                                       [ 0.00,  11.62, -1.40],
-                                       [ 0.00,  15.80, -0.20],
-                                       [ 0.00,  17.40, -0.20]],
-                         'bat-led-B': [[ 0.00,  17.40, -0.20],
-                                       [ 8.51,  17.40,  1.30],
-                                       [13.20,  17.40,  1.30],
-                                       [17.20,  13.40,  1.30],
-                                       [31.13,  13.40,  1.30],
-                                       [32.63,  13.40,  1.70]],
-                           'bat-led': [[ 0.00,   0.00,  0.00],
-                                       [ 0.00,   2.97,  0.00],
-                                       [ 0.00,   7.85, -1.40],
-                                       [ 0.00,  11.62, -1.40],
-                                       [ 0.00,  15.80, -0.20],
-                                       [ 0.00,  17.40, -0.20],
-                                       [ 8.51,  17.40,  1.30],
-                                       [13.20,  17.40,  1.30],
-                                       [17.20,  13.40,  1.30],
-                                       [31.13,  13.40,  1.30],
-                                       [32.63,  13.40,  1.00]],
-                           'led-swt': [[39.77,  13.40,  1.00],
-                                       [41.27,  13.40,  1.30],
-                                       [56.20,  13.40,  1.30],
-                                       [56.20, -13.40,  1.30],
-                                       [47.20, -13.40,  1.30],
-                                       [47.20, -13.40,  0.30]],
-                         'swt-bat-A': [[25.20, -13.40,  0.30],
-                                       [25.20, -13.40,  1.30],
-                                       [17.20, -13.40,  1.30],
-                                       [13.20, -17.40,  1.30],
-                                       [ 0.00, -17.40,  1.30]],
-                         'swt-bat-B': [[ 0.00, -17.40,  1.30],
-                                       [ 0.00, -11.40,  1.30],
-                                       [ 0.00, -11.40,  2.80],
-                                       [ 0.00,  -9.00,  2.80]],
-                           'swt-bat': [[25.20, -13.40,  1.30],
-                                       [17.20, -13.40,  1.30],
-                                       [13.20, -17.40,  1.30],
-                                       [ 0.00, -17.40,  1.30],
-                                       [ 0.00, -11.40,  1.30],
-                                       [ 0.00, -11.40,  2.80],
-                                       [ 0.00,  -9.00,  2.80]],
-                        'bat-anchor': [[ 0.00,   0.00,  0.00]],
-                      'led-anchor-A': [[32.13,  13.40,  2.00],
-                                       [29.63,  13.40,  2.00]],
-                      'led-anchor-B': [[40.27,  13.40,  2.00],
-                                       [42.77,  13.40,  2.00]],
-                      'swt-anchor-A': [[47.20, -13.40,  1.50],
-                                       [50.20, -13.40,  1.50]],
-                      'swt-anchor-B': [[25.20, -13.40,  1.50],
-                                       [22.20, -13.40,  1.50]]},
-             'squares': {
-                      'swt-square-A': [[44.75, -16.10], [50.15, -10.70], 1.70],
-                      'swt-square-B': [[23.75, -16.10], [29.15, -10.70], 1.70],
-                   'swt-reinforce-A': [[44.75, -20.10], [55.15, -06.70], 2.80],
-                   'swt-reinforce-B': [[18.75, -20.10], [29.15, -06.70], 2.80]},
-                'arcs': {  'bat-arc': [[-145.04, 46.82, 39.00], 10.15, [3*pi/4, pi/4]]}}
-
-"""
-DEMO CIRCUIT
-Waypoint offsets from CAD model:
-          X      Y      Z
-BAT - LED
-00 -     0.0    0.0    0.00
-01 -     0.0   +2.97   0.00
-02 -     0.0   +7.85  -1.40
-03 -     0.0  +11.62  -1.40
-04 -     0.0  +15.80  -0.20
-05 -     0.0  +17.40  -0.20
-06 -    +8.51 +17.40  +1.30
-07 -   +17.20 +13.40  +1.30
-08 -   +32.63 +13.40  +1.30
-
-LED - SWT
-00 -   +39.77 +13.40  +1.30
-01 -   +56.20 +13.40  +1.30
-02 -   +56.20 -13.40  +1.30
-03 -   +47.20 -13.40  +1.30
-
-SWT - BAT
-00 -   +25.20 -13.40  +1.30
-01 -   +17.20 -13.40  +1.30
-02 -   +13.20 -17.40  +1.30
-03 -     0.0  -17.40  +1.30
-04 -     0.0  -11.40  +1.30
-05 -     0.0  -11.40  +2.80
-06 -     0.0    0.0   +2.80
-"""
+            #  'squares': {
+            #           'swt-square-A': [[44.75, -16.10], [50.15, -10.70], 1.70],
+            #           'swt-square-B': [[23.75, -16.10], [29.15, -10.70], 1.70],
+            #        'swt-reinforce-A': [[44.75, -20.10], [55.15, -06.70], 2.80],
+            #        'swt-reinforce-B': [[18.75, -20.10], [29.15, -06.70], 2.80]},
+            #     'arcs': {  'bat-arc': [[-145.04, 46.82, 39.00], 10.15, [3*pi/4, pi/4]]}}
 
 
 load_calibration_data()
@@ -132,6 +42,7 @@ meander_square_size = {"battery":0.01,
                   "microcontroller":0.035,
                   "button":0.01,
                   "led":0.035}
+
 wire_schematic = []
 def clear_tip(delay=1.0):
     """
@@ -144,22 +55,12 @@ def clear_tip(delay=1.0):
     time.sleep(delay)
     ink_off()
 
-def get_most_recent_saved_file(folder):
-    files = [os.path.join(folder, f) for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
-    if not files:
-        return None
-    return max(files, key=os.path.getctime)
-
-def get_traces():
+def get_traces(recentsavefilepath):
     """
     Takes a schematic of print traces in offset format and calculates all the waypoints
     for the ink print head given the origin position.
     Returns a dictionary of traces for printing. (Preserving IDs)
     """
-    # savefolderpath = os.path.join(os.getcwd(),"saves")
-    # recentsavefilepath = get_most_recent_saved_file(savefolderpath)
-    # recentsavefilepath = r"C:\git\ADML\Automated Circuit Printing and Assembly\finalSendToMill.json"
-    recentsavefilepath = r"Automated Circuit Printing and Assembly/finalSendToMill.json"
     print(f"Save file path: {recentsavefilepath}")
     with open(recentsavefilepath, 'r') as f:
         data = json.load(f)
@@ -183,7 +84,7 @@ def get_traces():
     return wiring_schematic
 
 def printink(terminal_pos, terminal_component,print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY,
-                dry_print=True):
+                dry_print=DRY_RUN):
     if dry_print == True:
         set_pressure(ATMOSPHERE)
     else:
@@ -194,7 +95,7 @@ def printink(terminal_pos, terminal_component,print_pressure=PRINT_PRESSURE, pri
 
     meander_terminal(terminal_pos,terminal_component)
 
-def meander_terminal(centre, component, k=3):
+def meander_terminal(centre, component, k=3,speed=0.005):
     start_x = centre[0] - (meander_square_size[component]/39.37)
     start_y = centre[1] - (meander_square_size[component]/39.37)
 
@@ -204,12 +105,12 @@ def meander_terminal(centre, component, k=3):
     y_step = ((end_y - start_y) / k)
 
     startpos = [start_x,start_y,centre[2],centre[3],centre[4],centre[5]]
-    rtde_control.moveL(startpos,speed=0.005)
+    rtde_control.moveL(startpos,speed=speed)
     next_x = end_x
     next_y = start_y
     for i in range(k*2):
         endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]]
-        rtde_control.moveL(endpos,speed=0.005)
+        rtde_control.moveL(endpos,speed=speed)
         if i % 2 == 0:
             next_y = next_y + y_step
         else:
@@ -218,14 +119,27 @@ def meander_terminal(centre, component, k=3):
             else:
                 next_x = end_x
 
-    rtde_control.moveL(centre,speed=0.005)
+    rtde_control.moveL(centre,speed=speed)
 
-def reinforce_connection():
-    for wire in wire_schematic:
+def reinforce_connection(reinforced_wire_schematic):
+    grab_inkprinter()
+
+    for wire in reinforced_wire_schematic:
         for i,node in enumerate(wire):
             if i==0 or i==len(wire) - 1:
                 nodepos = node['pos']+[0,pi,0]
+                rtde_control.moveL(nodepos, speed=slow)
+                ink_on()
+                time.sleep(PRIMER_DELAY)
                 meander_terminal(nodepos, node['comp'])
+                ink_off()
+                node_z_heaven = nodepos[2] + 50/1000 #mm to m
+                current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
+                rtde_control.moveL(current_node_heaven, speed=slow)
+    
+    if not DRY_RUN:
+        clear_tip(delay=0.5)
+    return_inkprinter()
 
 def prime_ink():
     """
@@ -239,40 +153,42 @@ def prime_ink():
     ink_off()
     set_pressure(ATMOSPHERE)
 
-def move_to_node(pos, comp, index, maxindex):
+def move_to_node(pos, comp, index, maxindex,speed=0.005):
     if index == maxindex:
-        rtde_control.moveL(pos, speed=0.005)
-        printink(pos,comp)
+        rtde_control.moveL(pos, speed=speed)
+        printink(terminal_pos=pos,terminal_component=comp)
     else:
-        rtde_control.moveL(pos, speed=0.005)
+        rtde_control.moveL(pos, speed=speed)
 #-----------------------------------------------------------------------------------------------------------
 # === # Ink Trace Printing Code # === #
 
 
-def main():
+def ink_trace(file_path,dry_run=True):
     """
     Main script loop
     """
-    wire_schematic = get_traces()
+    global DRY_RUN
+    DRY_RUN = dry_run
+    wire_schematic = get_traces(file_path)
     grab_inkprinter()
-    # prime_ink()
-    # clear_tip(delay=0.5)
+
     for wire in wire_schematic:
         for i,node in enumerate(wire):
             nodepos = node['pos']+[0,pi,0]
             if i==0:
                 rtde_control.moveL(nodepos, speed=fast)
-                printink(nodepos,node['comp'])
+                printink(terminal_pos=nodepos,terminal_component=node['comp'])
             else:
-                move_to_node(nodepos,node['comp'],i,len(wire) - 1)
+                move_to_node(pos=nodepos,comp=node['comp'],index=i,maxindex=len(wire) - 1)
 
         ink_off()
         z_heaven = wire[len(wire) - 1]['pos'][2] + 50/1000 #mm to m
         node_heaven = [wire[len(wire) - 1]['pos'][0],wire[len(wire) - 1]['pos'][1],z_heaven] + [0,pi,0]
         rtde_control.moveL(node_heaven, speed=slow)
 
-    # clear_tip(delay=0.5)
+    if not DRY_RUN:
+        clear_tip(delay=0.5)
     return_inkprinter()
 
-if __name__ == "__main__":
-    main()
+#Test InkTracing Module
+# ink_trace(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\finalSendToMill.json")

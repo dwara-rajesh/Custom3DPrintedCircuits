@@ -13,9 +13,9 @@ from coreModule import *
 PRESSURE_THRESHOLD = 6.0 # If vacuum is on, and pressure reading is below this, an object has been picked up!
 
 load_calibration_data()
-z_origin = CALIBRATION_DATA['vac'][2] + top_right_vise[2]
-origin_in_m = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_origin, 0, math.pi, 0] #top right corner of stock on vice in rosie station
-origin = [val * 1000 for val in origin_in_m[:3]] + [0,math.pi,0] #origin in mm
+z_origin_vac = CALIBRATION_DATA['vac'][2] + top_right_vise[2]
+origin_in_m_vac = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_origin_vac, 0, math.pi, 0] #top right corner of stock on vice in rosie station
+origin_vac = [val * 1000 for val in origin_in_m_vac[:3]] + [0,math.pi,0] #origin in mm
 tip_offset_from_gripper = 1.1705 * 25.4 #convert in to mm
 pickupfailed = False
 pickedup = False
@@ -53,20 +53,8 @@ COMPONENTS = {'battery': {'start': [91.87, 50.15],   # XY coords of the start of
                    'pocket_depth': 0.124,
                           'z_val': -1.0}}
 
-# get recent save data
-def get_most_recent_saved_file(folder):
-    files = [os.path.join(folder, f) for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
-    if not files:
-        return None
-    return max(files, key=os.path.getctime)
-
 # get robot world coordinates for components
-def determine_schematic():
-    # savefolderpath = os.path.join(os.getcwd(),"saves")
-    # recentsavefilepath = get_most_recent_saved_file(savefolderpath)
-    recentsavefilepath = r"C:\git\ADML\Automated Circuit Printing and Assembly\finalSendToMill.json"
-    print(f"Save file path: {recentsavefilepath}")
-
+def determine_schematic(recentsavefilepath):
     with open(recentsavefilepath, 'r') as f:
         data = json.load(f)
 
@@ -74,9 +62,9 @@ def determine_schematic():
     for component in data['componentdata']:
         if component['modelName'] != "stock":
             name = os.path.splitext(os.path.basename(component['modelName']))[0].lower()
-            position_x = origin[0] + (component['posX'] * 25.4) #convert in to mm
-            position_y = origin[1] + (component['posY'] * 25.4)
-            position_z = origin[2] + COMPONENT_HEIGHTS[name]
+            position_x = origin_vac[0] + (component['posX'] * 25.4) #convert in to mm
+            position_y = origin_vac[1] + (component['posY'] * 25.4)
+            position_z = origin_vac[2] + COMPONENT_HEIGHTS[name]
             position = [position_x,position_y,position_z]
             if component['rotZ'] == 270:
                 component['rotZ'] = -90
@@ -110,10 +98,10 @@ def move_to_component(component, index, Z_target=2.0, speed=precise):
 
     # Check that given component is valid, and its index exists in the grid:
     if component not in COMPONENTS:
-        msg =  f"ComponentName Error, {component} is not a valid component!"
+        msg =  f"ComponentName ERROR, {component} is not a valid component!"
         return msg
     if index >= COMPONENTS[component]['grid'][0] * COMPONENTS[component]['grid'][1]:
-        msg = f"ComponentGridIndex Error: index {index + 1} is outside the grid!"
+        msg = f"ComponentGridIndex ERROR: index {index + 1} is outside the grid!"
         return msg
 
     pos_data = COMPONENTS[component]
@@ -137,7 +125,7 @@ def move_to_component(component, index, Z_target=2.0, speed=precise):
     goto_pos(target_pos, speed=speed)
     return target_pos
 
-def pickup_component(component, index, skip_hover=False, print_warnings=False):
+def pickup_component(component, index, skip_hover=False, print_warnings=False,print_log=False):
     """
     Moves to, and picks up the specified component using the
     vacuum pick-and-place nozzle
@@ -172,7 +160,8 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
 
     # Slowly step downwards monitoring the vacuum pressure
     vacuum_on() # Turn vacuum on if it is not already
-    print("Vacuum On")
+    if print_log:
+        print("Vacuum On")
 
     depth_travelled_into_grid = abs(initial_pos[2] - target_pos[2]) #in mm
     while get_pressure() > PRESSURE_THRESHOLD and depth_travelled_into_grid < (COMPONENTS[component]['pocket_depth'] * 25.4): # True when object not yet picked up
@@ -188,7 +177,7 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
                 print("Pick-and-Place nozzle WARNING: Max force exceeded!")
     placed_components[component].append(index)
     inventory_management('w')
-    if depth_travelled_into_grid >= (COMPONENTS[component]['pocket_depth'] * 25.4):
+    if depth_travelled_into_grid >= (COMPONENTS[component]['pocket_depth'] * 25.4) and print_warnings:
         print("Pick-and-Place nozzle WARNING: Max depth inside grid pocket reached!")
     if get_pressure() > PRESSURE_THRESHOLD:
         print(f"Pick N Place: Failed to pickup {component} in slot #{index + 1}, moving to next slot to attempt pickup")
@@ -199,11 +188,13 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
             pickupfailed = True
         else:
             vacuum_off()
-            print("Vacuum  Off")
+            if print_log:
+                print("Vacuum  Off")
             target_pos = pickup_component(component=component, index=index)
     else:
         pickedup = True
-        print(f"Pick N Place: Picked up [{component}] from slot [{index + 1}]")
+        if print_log:
+            print(f"Pick N Place: Picked up [{component}] from slot [{index + 1}]")
 
     if pickupfailed:
         index = maxindex
@@ -219,20 +210,13 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False):
 
     return pickupfailed
 
-def place_component(target_pos,rot, heaven=0.4318552510405578):#100):
+def place_component(target_pos,rot, heaven=0.4318552510405578,print_log=False):
     """
     Places the currently held component at the target coordinates
     Travels at heaven height to avoid collisions
 
     Assumes that the nozzle vacuum is ON and currently holding a component!
     """
-    # actual_pos = get_pos()
-
-    # # Raise to heaven height
-    # actual_pos[2] = heaven
-    # print("GOTO ActualPos Heaven")
-    # goto_pos(actual_pos)
-
     # Travel to target coordinates
     rtde_control.moveL([target_pos[0], target_pos[1], heaven,0,math.pi,0], speed=precise)
 
@@ -250,7 +234,8 @@ def place_component(target_pos,rot, heaven=0.4318552510405578):#100):
     set_pressure(PLACE_PRESSURE) # Apply short burst of positive pressure to release component
     time.sleep(0.8)
     vacuum_off(delay=2)
-
+    if print_log:
+        print("Placed Component Successfully")
     target_heaven = [target_pos[0], target_pos[1], heaven] + currentrot
     rtde_control.moveL(target_heaven, speed=slow)
     jointangles = rtde_receive.getActualQ()
@@ -266,8 +251,6 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
     global placed_components
     if print_log == True:
         print("Pick-and-Place - Schematic assembly started...")
-
-    if print_log == True:
         print("Pick-and-Place - Closing and cycling vice...")
     close_vice() # Close the assembly vice to fix substrate in place
     if cycle_vice == True:
@@ -294,18 +277,18 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
             print(f"ComponentInventory ERROR: {component['type']} inventory is empty! Please refill")
             pickupfailed = True
         if pickupfailed:
-            break
+            return False
         else:
             if print_log == True:
                 print(f"Pick-and-Place: {part_num}/{len(schematic)}\nPicking up {component['type']} #{index + 1} from {component['type']} inventory grid")
             pickup = pickup_component(component['type'], index)
             if pickup:
                 print(f"ComponentInventory ERROR: {component['type']} inventory is empty! Please refill")
+                return False
             else:
                 if print_log:
                     print(f"Placing component [{component['type']}] in Coordinates: {component['pos']}")
                 tagretpos = [x/1000 for x in component['pos']]
-                print(tagretpos)
                 place_component(tagretpos, component['rot'])
                 part_num += 1
 
@@ -313,6 +296,7 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
     if print_log == True:
         print("Pick-and-Place - Assembly complete! Returning to standby...")
     rtde_control.moveL(standby, speed=fast)
+    return True
 
 def inventory_management(operation):
     inventory_file_path = r"C:\git\ADML\Automated Circuit Printing and Assembly\inventory.json"
@@ -327,16 +311,15 @@ def inventory_management(operation):
         with open(inventory_file_path, operation) as f:
             data = json.dump(placed_components,f)
 
-def main():
+def PNP(file_path):
     """
     Main script loop
     """
-    time.sleep(5)
-    circuit_schematic = determine_schematic()
+    circuit_schematic = determine_schematic(file_path)
     inventory_management('r')
     grab_nozzle()
-    circuit_pick_and_place(circuit_schematic, print_log=False)
+    result = circuit_pick_and_place(circuit_schematic, print_log=False)
     return_nozzle()
-
-if __name__ == "__main__":
-    main()
+    return result
+# Test Pick N Place Module
+# PNP(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\finalSendToMill.json")
