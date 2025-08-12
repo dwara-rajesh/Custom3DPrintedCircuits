@@ -23,7 +23,53 @@
             "rotX": 0,
             "rotY": 0,
             "rotZ": 90
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\button.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\button.f3d",
+            "posX": -1.5,
+            "posY": -1.0,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
         }
     ],
-    "wiresdata": []
+    "wiresdata": [
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -1.5,
+                    "posY": -1.378,
+                    "component": "button",
+                    "componentid": 1,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.5059,
+                    "posY": -1.7172,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.5059,
+                    "posY": -1.7172,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.5,
+                    "posY": -1.0,
+                    "component": "battery",
+                    "componentid": 0,
+                    "batteryneg": "n"
+                }
+            ],
+            "pole": "n"
+        }
+    ]
 }

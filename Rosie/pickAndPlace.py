@@ -37,8 +37,8 @@ COMPONENTS = {'battery': {'start': [91.87, 50.15],   # XY coords of the start of
                   'led': {'start': [22.55, 66.63],
                             'end': [67.39, 106.07],
                            'grid': (4, 5),           # Grid dimensions (4x5)
-                      'threshold': 10.8,
-                   'pocket_depth': 0.1,
+                      'threshold': 10.89,
+                   'pocket_depth': 0.14,
                           'z_val': 0.0},
                'button': {'start': [29.7, 13.95],
                             'end': [60.45, 50.25],
@@ -148,7 +148,7 @@ def pickup_component(component, index, skip_hover=False, print_warnings=False,pr
     #    vertical_clearance -= 2 # Pick up switches from lower height to save time
 
     PRESSURE_THRESHOLD = COMPONENTS[component]['threshold'] # Component-specific pressure threshold for pickup
-    MAX_FORCE = 35 # Max force to be applied by the nozzle if no pressure drop is detected
+    MAX_FORCE = 100 # Max force to be applied by the nozzle if no pressure drop is detected
 
     # Move nozzle above component and store position
     if skip_hover != True: # By default, nozzle moves to component location at heaven height, and then lowers onto it (This can be skipped)
@@ -236,8 +236,10 @@ def place_component(target_pos,rot, heaven=0.4318552510405578,print_log=False):
     vacuum_off(delay=2)
     if print_log:
         print("Placed Component Successfully")
+
     target_heaven = [target_pos[0], target_pos[1], heaven] + currentrot
     rtde_control.moveL(target_heaven, speed=slow)
+
     jointangles = rtde_receive.getActualQ()
     jointangles[5] = initialjoint
     rtde_control.moveJ(jointangles)
@@ -321,5 +323,23 @@ def PNP(file_path):
     result = circuit_pick_and_place(circuit_schematic, print_log=False)
     return_nozzle()
     return result
+
+def PNP_Test():
+    grab_nozzle()
+    comp_grid = {"button":8,"battery":9,"microcontroller":2,"led":20}
+    for key, value in comp_grid.items():
+        if key == "led":
+            for i in range(value):
+                pickup_component(key,i)
+                pos = rtde_receive.getActualTCPPose()
+                pos[2] -= 54/1000
+                place_component(pos[:3],0)
+    return_nozzle()
 # Test Pick N Place Module
 # PNP(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\finalSendToMill.json")
+PNP_Test()
+#Flex Resin
+# Button: 8/8, Battery: 9/9, Microcontroller: 2/2, LED: 15/20
+
+#TPU
+# Button: 7/8, Battery: 6/9, Microcontroller: 0/2, LED: 12/20

@@ -41,32 +41,6 @@
         {
             "wireNodesdata": [
                 {
-                    "posX": -2.5,
-                    "posY": -0.64,
-                    "component": "battery",
-                    "componentid": 0,
-                    "batteryneg": "p"
-                },
-                {
-                    "posX": -2.0113,
-                    "posY": -0.3308,
-                    "component": null,
-                    "componentid": null,
-                    "batteryneg": null
-                },
-                {
-                    "posX": -1.5,
-                    "posY": -0.622,
-                    "component": "button",
-                    "componentid": 1,
-                    "batteryneg": null
-                }
-            ],
-            "pole": "p"
-        },
-        {
-            "wireNodesdata": [
-                {
                     "posX": -1.5,
                     "posY": -1.378,
                     "component": "button",
@@ -96,6 +70,39 @@
                 }
             ],
             "pole": "n"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -1.5,
+                    "posY": -0.622,
+                    "component": "button",
+                    "componentid": 1,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.5,
+                    "posY": -0.51,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.5,
+                    "posY": -0.51,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.5,
+                    "posY": -0.61,
+                    "component": "battery",
+                    "componentid": 0,
+                    "batteryneg": "p"
+                }
+            ],
+            "pole": "p"
         }
     ]
 }
