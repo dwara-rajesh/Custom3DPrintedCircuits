@@ -264,7 +264,7 @@ class OpenGLViewer(QOpenGLWidget):
         if i in self.selected_node_indices:
             glColor3f(0.0,0.0,1.0)
         else:
-            glColor3f(1.0, 1.0, 0.0)
+            glColor3f(0.8902, 0.0863, 0.9137)
 
         glBegin(GL_TRIANGLE_FAN)
         glVertex3f(nodedata['posX'], nodedata['posY'], 2.0)

@@ -53,32 +53,6 @@
         {
             "wireNodesdata": [
                 {
-                    "posX": -1.3622,
-                    "posY": -0.25,
-                    "component": "LED",
-                    "componentid": 2,
-                    "batteryneg": null
-                },
-                {
-                    "posX": -0.5,
-                    "posY": -0.25,
-                    "component": null,
-                    "componentid": null,
-                    "batteryneg": null
-                },
-                {
-                    "posX": -0.5,
-                    "posY": -0.64,
-                    "component": "battery",
-                    "componentid": 0,
-                    "batteryneg": "p"
-                }
-            ],
-            "pole": "p"
-        },
-        {
-            "wireNodesdata": [
-                {
                     "posX": -1.6378,
                     "posY": -0.25,
                     "component": "LED",
@@ -105,6 +79,32 @@
         {
             "wireNodesdata": [
                 {
+                    "posX": -1.3622,
+                    "posY": -0.25,
+                    "component": "LED",
+                    "componentid": 2,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -0.5,
+                    "posY": -0.25,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -0.5,
+                    "posY": -0.61,
+                    "component": "battery",
+                    "componentid": 0,
+                    "batteryneg": "p"
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
                     "posX": -0.5,
                     "posY": -1.0,
                     "component": "battery",
@@ -112,8 +112,15 @@
                     "batteryneg": "n"
                 },
                 {
-                    "posX": -1.5109,
-                    "posY": -1.6824,
+                    "posX": -0.482,
+                    "posY": -1.7192,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.503,
+                    "posY": -1.7312,
                     "component": null,
                     "componentid": null,
                     "batteryneg": null
