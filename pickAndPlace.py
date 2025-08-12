@@ -299,7 +299,7 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
     return True
 
 def inventory_management(operation):
-    inventory_file_path = r"C:\git\ADML\Automated Circuit Printing and Assembly\inventory.json"
+    inventory_file_path = r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\inventory.json"
 
     if operation == 'r':
         with open(inventory_file_path, operation) as f:
