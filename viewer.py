@@ -24,7 +24,7 @@ class OpenGLViewer(QOpenGLWidget):
             "LED.obj": [(-0.1378,0),(0.1378,0)], #[neg,pos]
             "microcontroller.obj": [(-0.225,0.375),(0.225, 0.375),(-0.25,0.225),(0.25,0.225),(-0.25,0.125),(0.25,0.125),(-0.25,0.025),(0.25,0.025),(-0.25,-0.075),(0.25,-0.075),(-0.25,-0.175),(0.25,-0.175),(-0.24,-0.27),(0.24,-0.27)], #top to bottom - (right, left)
             "button.obj": [(-0.378,0),(0.378,0)],
-            "battery.obj": [(0,0),(0.36,0)] #negative terminal at (0,0)
+            "battery.obj": [(0,0),(0.4,0)] #negative terminal at (0,0)
         }
         #Component Loading
         self.stock = None #stock variable
@@ -134,7 +134,7 @@ class OpenGLViewer(QOpenGLWidget):
                     if wire['pole'] == 'p':
                         glColor3f(0.0, 1.0, 0.0)
                     elif wire['pole'] == 'n':
-                        glColor3f(0.0, 0.0, 0.0)
+                        glColor3f(1.0, 0.0, 0.0)
                     glVertex3f(start['posX'], start['posY'], 2.0)  # slight z offset
                     glVertex3f(end['posX'], end['posY'], 2.0)
             glEnd()
@@ -264,7 +264,7 @@ class OpenGLViewer(QOpenGLWidget):
         if i in self.selected_node_indices:
             glColor3f(0.0,0.0,1.0)
         else:
-            glColor3f(1.0, 0.0, 0.0)
+            glColor3f(1.0, 1.0, 0.0)
 
         glBegin(GL_TRIANGLE_FAN)
         glVertex3f(nodedata['posX'], nodedata['posY'], 2.0)
@@ -369,17 +369,28 @@ class OpenGLViewer(QOpenGLWidget):
                                 self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
                                 self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
                             else:
-                                print("x <= y")
                                 self.wirenodesdata.append({'posX': terminal[0]+0.1, 'posY': terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
                                 self.wirenodesdata.append({'posX': terminal[0]+0.1, 'posY': clicked_terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
                                 self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
                         else:
+                            x_diff = abs(terminal[0] - clicked_terminal[0])
+                            y_diff = abs(terminal[1] - clicked_terminal[1])
                             if terminal[0] == clicked_terminal[0] or terminal[1] == clicked_terminal[1]:
                                 pass
-                            elif abs(terminal[0] - clicked_terminal[0]) >  abs(terminal[1] - clicked_terminal[1]):
-                                self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
+                            elif y_diff > 0.5 or x_diff > 0.5:
+                                if x_diff > y_diff:
+                                    self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
+                                else:
+                                    self.wirenodesdata.append({'posX': terminal[0], 'posY': clicked_terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
                             else:
-                                self.wirenodesdata.append({'posX': terminal[0], 'posY': clicked_terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
+                                if x_diff > y_diff:
+                                    self.wirenodesdata.append({'posX': terminal[0], 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
+                                    self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1]+0.1,'component': None, 'componentid': None, 'batteryneg': None})
+                                    self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
+                                else:
+                                    self.wirenodesdata.append({'posX': terminal[0]+0.1, 'posY': terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
+                                    self.wirenodesdata.append({'posX': terminal[0]+0.1, 'posY': clicked_terminal[1],'component': None, 'componentid': None, 'batteryneg': None})
+                                    self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
                             self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': clicked_terminal[1],'component': clicked_key, 'componentid': clicked_id, 'batteryneg': battery_neg })
                         self.wire_start_terminal = None
                         self.update()
