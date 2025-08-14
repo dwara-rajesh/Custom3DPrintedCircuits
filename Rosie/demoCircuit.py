@@ -1,7 +1,7 @@
 """
 Module containing the code to fully assemble and print the demo LED + Switch circuit
 """
-
+import sys
 import time
 import math
 import rtde_io
@@ -17,22 +17,22 @@ from pickAndPlace import *
 from inkTracing import *
 
 TEST_RUN = True #if True, no ink extrusion (dry run), else ink extrusion (wet run)
-savefolder = r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025"
-def get_most_recent_saved_file(folder):
-    files = [os.path.join(folder, f) for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith(".json")]
-    if not files:
-        return None
-    return max(files, key=os.path.getctime)
+# savefolder = r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025"
+# def get_most_recent_saved_file(folder):
+#     files = [os.path.join(folder, f) for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith(".json")]
+#     if not files:
+#         return None
+#     return max(files, key=os.path.getctime)
 
-def main():
+def main(projfile):
     """
     Main script loop - RUNS PROCESS TO ASSEMBLE DEMO CIRCUIT
     """
 
     global TEST_RUN # Prevents python from being stupid >:(
     close_vice()
-    file_path = get_most_recent_saved_file(savefolder)
-
+    # file_path = get_most_recent_saved_file(savefolder)
+    file_path = projfile
     #Trace Wire -> Place Components -> Reinforce Connection
     ink_trace(file_path,TEST_RUN)
     pnpcomplete = PNP(file_path)
@@ -53,5 +53,8 @@ def runBUMES():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        main(sys.argv[1]) #loads any project file given
+    else:
+        print("Enter absolute project file path")
     rtde_control.stopScript()
