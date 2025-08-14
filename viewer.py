@@ -225,16 +225,27 @@ class OpenGLViewer(QOpenGLWidget):
         w = round(w,4)
         h = round(h,4)
         vertices = [
-            [-l, 0, 0],
-            [0, 0, 0],
-            [0, -w, 0],
-            [-l, -w, 0],
+            [-l, 0, 0], # top left
+            [0, 0, 0], # top right
+            [0, -w, 0], # bottom right
+            [-l, -w, 0], # bottom left
         ]
         #Draw stock
         glBegin(GL_QUADS)
         for vertex in vertices:
             glVertex3fv(vertex)
         glEnd()
+
+        #Generate border - only allowed to draw within border to account for chamfer offset = 0.1
+        glLineWidth(2.0 / self.scaley)
+        glColor3f(0.0, 0.0, 0.0)
+        glBegin(GL_LINE_LOOP)
+        glVertex3f(-l+0.1, -0.1,1) # top left
+        glVertex3f(-0.1, -0.1,1) # top right
+        glVertex3f(-0.1, -w+0.1,1) # bottom right
+        glVertex3f(-l+0.1, -w+0.1,1) # bottom left
+        glEnd()
+
         glPopMatrix()
         self.center_and_zoom_camera_on_stock(l,w)
 

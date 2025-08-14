@@ -83,14 +83,16 @@ def get_traces(recentsavefilepath):
 
     return wiring_schematic
 
-def printink(terminal_pos, terminal_component,print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY,
-                dry_print=DRY_RUN):
-    if dry_print == True:
+def printink(terminal_pos, terminal_component,print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY):
+    if DRY_RUN == True:
+        print(f"Setting Atmosphere Pressure: {ATMOSPHERE}")
         set_pressure(ATMOSPHERE)
     else:
+        print(f"Setting Print Pressure: {print_pressure}")
         set_pressure(print_pressure)
 
     ink_on()
+    print("Ink On")
     time.sleep(primer_delay)
 
     meander_terminal(terminal_pos,terminal_component)
@@ -136,7 +138,7 @@ def reinforce_connection(reinforced_wire_schematic):
                 node_z_heaven = nodepos[2] + 50/1000 #mm to m
                 current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
                 rtde_control.moveL(current_node_heaven, speed=slow)
-    
+
     if not DRY_RUN:
         clear_tip(delay=0.5)
     return_inkprinter()
@@ -191,4 +193,4 @@ def ink_trace(file_path,dry_run=True):
     return_inkprinter()
 
 #Test InkTracing Module
-# ink_trace(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\finalSendToMill.json")
+ink_trace(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\finalSendToMill.json",dry_run=False)
