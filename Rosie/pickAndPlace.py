@@ -340,7 +340,7 @@ def PNP_Test():
 #YieldTest
 # PNP_Test()
 #Flex Resin
-# Button: 8/8, Battery: 9/9, Microcontroller: 2/2, LED: 15/20]
+# Button: 8/8, Battery: 9/9, Microcontroller: 2/2, LED: 15/20
 #TPU
-# Button: 7/8, Battery: 6/9, Microcontroller: 0/2, LED: 12/20
+# Button: 7/8, Battery: 6/9, Microcontroller: 2/2, LED: 12/20
 #HENCE FLEX RESIN BETTER
