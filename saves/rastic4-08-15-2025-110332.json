@@ -1,0 +1,94 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -2.5,
+            "posY": -1.5,
+            "dimX": 5.0,
+            "dimY": 3.0,
+            "dimZ": 1.0,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\microcontroller.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\microcontroller.f3d",
+            "posX": -2.0,
+            "posY": -1.2,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\button.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\button.f3d",
+            "posX": -3.0,
+            "posY": -0.5,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 180
+        }
+    ],
+    "wiresdata": [
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -2.622,
+                    "posY": -0.5,
+                    "component": "button",
+                    "componentid": 1,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.225,
+                    "posY": -0.5,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.225,
+                    "posY": -0.825,
+                    "component": "microcontroller",
+                    "componentid": 0,
+                    "batteryneg": null
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -2.24,
+                    "posY": -1.47,
+                    "component": "microcontroller",
+                    "componentid": 0,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -3.378,
+                    "posY": -1.47,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -3.378,
+                    "posY": -0.5,
+                    "component": "button",
+                    "componentid": 1,
+                    "batteryneg": null
+                }
+            ],
+            "pole": "p"
+        }
+    ]
+}
