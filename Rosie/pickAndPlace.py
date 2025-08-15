@@ -37,19 +37,19 @@ COMPONENTS = {'battery': {'start': [91.87, 50.15],   # XY coords of the start of
                   'led': {'start': [22.55, 66.63],
                             'end': [67.39, 106.07],
                            'grid': (4, 5),           # Grid dimensions (4x5)
-                      'threshold': 10.89,
+                      'threshold': 10.84,
                    'pocket_depth': 0.14,
                           'z_val': 0.0},
                'button': {'start': [29.7, 13.95],
                             'end': [60.45, 50.25],
                            'grid': (2, 4),           # Grid dimensions (2x4)
-                      'threshold': 9.7,
+                      'threshold': 9.4,
                    'pocket_depth': 0.2,
                           'z_val': 1.0},
       'microcontroller': {'start': [101.84, 19.98],
                             'end': [139.93, 19.98],
                            'grid': (2, 1),           # Grid dimensions (2x1)
-                      'threshold': 9.9,
+                      'threshold': 9.7,
                    'pocket_depth': 0.124,
                           'z_val': -1.0}}
 
@@ -72,7 +72,7 @@ def determine_schematic(recentsavefilepath):
             elif component['rotZ'] == 90:
                 position = [position_x-tip_offset_from_gripper,position_y-tip_offset_from_gripper,position_z]
             elif component['rotZ'] == 180:
-                position = [position_x-tip_offset_from_gripper,position_y,position_z]
+                position = [position_x-2*tip_offset_from_gripper,position_y,position_z]
             rotation = math.radians(component['rotZ'])
             circuit_schematic.append({'type': name, 'pos': position, 'rot': rotation})
 
@@ -320,15 +320,17 @@ def PNP(file_path):
     circuit_schematic = determine_schematic(file_path)
     inventory_management('r')
     grab_nozzle()
+    vacuum_on()
     result = circuit_pick_and_place(circuit_schematic, print_log=False)
     return_nozzle()
     return result
 
 def PNP_Test():
     grab_nozzle()
-    comp_grid = {"button":8,"battery":9,"microcontroller":2,"led":20}
+    vacuum_on()
+    comp_grid = {"button":5,"battery":6,"microcontroller":2,"led":16}
     for key, value in comp_grid.items():
-        if key == "led":
+        if key == "microcontroller":
             for i in range(value):
                 pickup_component(key,i)
                 pos = rtde_receive.getActualTCPPose()
@@ -340,7 +342,7 @@ def PNP_Test():
 #YieldTest
 # PNP_Test()
 #Flex Resin
-# Button: 8/8, Battery: 9/9, Microcontroller: 2/2, LED: 15/20
+# Button: 8/8, Battery: 9/9, Microcontroller: 2/2, LED: 15/20 - New res all picked & Led 15/16
 #TPU
 # Button: 7/8, Battery: 6/9, Microcontroller: 2/2, LED: 12/20
 #HENCE FLEX RESIN BETTER

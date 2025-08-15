@@ -499,8 +499,9 @@ class mesProcess:
             "__builtins__": __builtins__,  #needed so that global execution works
             "file_to_process": filename,  #custom variable -> project file
         }
-        exec(code, exec_globals) #execute _mesFunctionalPrintingInit.py with global variables
 
+        exec(code, exec_globals) #execute _mesFunctionalPrintingInit.py with global variables
+        
         update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
             str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
         self.cursor.execute(update_task_complete_process_query)
@@ -511,7 +512,28 @@ class mesProcess:
         self.cursor.execute(update_task_complete_process_query)
         self.connection.commit()'''
 
-        print('Functional printing completed')
+        print("Functional pritining complete")
+
+    def dynamicMachining(self, mqttTopic, cncprognum='5333', fullSimTime=0.5):
+        processInfo = mqttTopic.split('/')
+        task = processInfo[1]
+        taskID = processInfo[0]
+
+        with open('_mesDynamicMachiningInit.py', 'r', encoding='utf-8') as f:
+            code = compile(f.read(), '_mesDynamicMachiningInit.py', 'exec')
+
+        #Adds global variables to _mesDynamicMachiningInit.py
+        exec_globals = {
+            "__builtins__": __builtins__,  #needed so that global execution works
+            "cnc_prog_number": cncprognum,  #custom variable -> CNC program number
+        }
+
+        exec(code, exec_globals) #execute _mesDynamicMachiningInit.py with global variables 
+         
+        update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
+            str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
+        self.cursor.execute(update_task_complete_process_query)
+        self.connection.commit()   
 
     # this command is generated within self.checkCurrentTask
     def resourceRelease(self, mqttTopic, resource, conveyorArg=None):

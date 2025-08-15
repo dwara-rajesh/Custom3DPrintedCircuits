@@ -38,10 +38,10 @@ origin_in_m_ink = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_orig
 origin_ink = [val * 1000 for val in origin_in_m_ink[:3]] + [0,math.pi,0] #origin in mm
 
 #in inches
-meander_square_size = {"battery":0.01,
-                  "microcontroller":0.035,
-                  "button":0.01,
-                  "led":0.035}
+meander_square_size = {"battery":0.035,
+                  "microcontroller":0.01,
+                  "button":0.035,
+                  "led":0.01}
 
 wire_schematic = []
 def clear_tip(delay=1.0):
@@ -55,7 +55,7 @@ def clear_tip(delay=1.0):
     time.sleep(delay)
     ink_off()
 
-def get_traces(recentsavefilepath):
+def get_traces(recentsavefilepath,reinforce=False):
     """
     Takes a schematic of print traces in offset format and calculates all the waypoints
     for the ink print head given the origin position.
@@ -74,30 +74,37 @@ def get_traces(recentsavefilepath):
             else:
                 component = node['component']
 
+            if node['batteryneg'] is None:
+                batteryneg = "empty"
+            else:
+                batteryneg = node['batteryneg']
+                
             nodeX = (origin_ink[0] + (node['posX'] * 25.4)) / 1000
             nodeY = (origin_ink[1] + (node['posY'] * 25.4)) / 1000
-            nodeZ = origin_ink[2] / 1000
+            if not reinforce:
+                nodeZ = origin_ink[2] / 1000
+            else:
+                nodeZ = origin_ink[2] / 1000 + 1/1000 #if reinforce offset z+ a little
 
-            nodes.append({"pos":[nodeX,nodeY,nodeZ], "comp": component})
+            nodes.append({"pos":[nodeX,nodeY,nodeZ], "comp": component, "batteryneg": batteryneg})
+
         wiring_schematic.append(nodes)
 
     return wiring_schematic
 
 def printink(terminal_pos, terminal_component,print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY):
     if DRY_RUN == True:
-        print(f"Setting Atmosphere Pressure: {ATMOSPHERE}")
         set_pressure(ATMOSPHERE)
     else:
-        print(f"Setting Print Pressure: {print_pressure}")
         set_pressure(print_pressure)
 
     ink_on()
-    print("Ink On")
     time.sleep(primer_delay)
 
     meander_terminal(terminal_pos,terminal_component)
 
 def meander_terminal(centre, component, k=3,speed=0.005):
+    component = component.lower()
     start_x = centre[0] - (meander_square_size[component]/39.37)
     start_y = centre[1] - (meander_square_size[component]/39.37)
 
@@ -128,7 +135,7 @@ def reinforce_connection(reinforced_wire_schematic):
 
     for wire in reinforced_wire_schematic:
         for i,node in enumerate(wire):
-            if i==0 or i==len(wire) - 1:
+            if (i==0 or i==len(wire) - 1) and node['batteryneg'] != "n":
                 nodepos = node['pos']+[0,pi,0]
                 rtde_control.moveL(nodepos, speed=slow)
                 ink_on()
@@ -193,4 +200,4 @@ def ink_trace(file_path,dry_run=True):
     return_inkprinter()
 
 #Test InkTracing Module
-ink_trace(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\finalSendToMill.json",dry_run=False)
+# ink_trace(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\finalSendToMill.json",dry_run=False)
