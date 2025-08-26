@@ -38,11 +38,16 @@ origin_in_m_ink = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_orig
 origin_ink = [val * 1000 for val in origin_in_m_ink[:3]] + [0,math.pi,0] #origin in mm
 
 #in inches
-meander_square_size = {"battery":0.035,
-                  "microcontroller":0.01,
-                  "button":0.035,
-                  "led":0.01}
-
+meander_square_size = {"battery":0.095,
+                  "microcontroller":0.035,
+                  "button":0.095,
+                  "led":0.035}
+#in inches
+reinforcements = {
+    "battery": 0.375, #diameter of battery
+    "button": 0.32, #bigger meander
+    "led": 0.05 #bigger meander
+}
 wire_schematic = []
 def clear_tip(delay=1.0):
     """
@@ -103,13 +108,13 @@ def printink(terminal_pos, terminal_component,print_pressure=PRINT_PRESSURE, pri
 
     meander_terminal(terminal_pos,terminal_component)
 
-def meander_terminal(centre, component, k=3,speed=0.005):
+def meander_terminal(centre, component, k=3,speed=0.005, reinforce=False):
     component = component.lower()
-    start_x = centre[0] - (meander_square_size[component]/39.37)
-    start_y = centre[1] - (meander_square_size[component]/39.37)
+    start_x = centre[0] - (meander_square_size[component]*0.5/39.37)
+    start_y = centre[1] - (meander_square_size[component]*0.5/39.37)
 
-    end_x = centre[0] + (meander_square_size[component]/39.37)
-    end_y = centre[1] + (meander_square_size[component]/39.37)
+    end_x = centre[0] + (meander_square_size[component]*0.5/39.37)
+    end_y = centre[1] + (meander_square_size[component]*0.5/39.37)
 
     y_step = ((end_y - start_y) / k)
 
@@ -130,6 +135,41 @@ def meander_terminal(centre, component, k=3,speed=0.005):
 
     rtde_control.moveL(centre,speed=speed)
 
+    if reinforce:
+        component = component.lower()
+        if component == "battery":
+            radius = reinforcements[component]*0.5/39.37
+            for i in range(0,361,10):
+                next_x = radius * math.cos(i) + centre[0]
+                next_y = radius * math.sin(i) + centre[1]
+                endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]]
+                rtde_control.moveL(endpos,speed=speed)
+        else:
+            start_x = centre[0] - (reinforcements[component]*0.5/39.37)
+            start_y = centre[1] - (reinforcements[component]*0.5/39.37)
+
+            end_x = centre[0] + (reinforcements[component]*0.5/39.37)
+            end_y = centre[1] + (reinforcements[component]*0.5/39.37)
+
+            y_step = ((end_y - start_y) / k)
+
+            startpos = [start_x,start_y,centre[2],centre[3],centre[4],centre[5]]
+            rtde_control.moveL(startpos,speed=speed)
+            next_x = end_x
+            next_y = start_y
+            for i in range(k*2):
+                endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]]
+                rtde_control.moveL(endpos,speed=speed)
+                if i % 2 == 0:
+                    next_y = next_y + y_step
+                else:
+                    if next_x == end_x:
+                        next_x = start_x
+                    else:
+                        next_x = end_x
+
+            rtde_control.moveL(centre,speed=speed)
+
 def reinforce_connection(reinforced_wire_schematic):
     grab_inkprinter()
 
@@ -140,7 +180,7 @@ def reinforce_connection(reinforced_wire_schematic):
                 rtde_control.moveL(nodepos, speed=slow)
                 ink_on()
                 time.sleep(PRIMER_DELAY)
-                meander_terminal(nodepos, node['comp'])
+                meander_terminal(nodepos, node['comp'],reinforce=True)
                 ink_off()
                 node_z_heaven = nodepos[2] + 50/1000 #mm to m
                 current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
