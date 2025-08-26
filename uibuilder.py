@@ -521,7 +521,7 @@ class CircuitBuilderWindow(QMainWindow):
             self.dropdown.setCurrentIndex(self.dropdown.findText("MENU"))
 
         if self.uploadfile: #if upload pressed
-            fusion_path = r"C:\Users\dwara\AppData\Local\Autodesk\webdeploy\production\6a0c9611291d45bb9226980209917c3d\FusionLauncher.exe"
+            fusion_path = r"C:\Users\dwara\AppData\Local\Autodesk\webdeploy\production\6a0c9611291d45bb9226980209917c3d\FusionLauncher.exe" #fusion launcher path
             if os.path.exists(fusion_path): #if fusion 360 exists
                 subprocess.Popen([fusion_path]) #launch fusion 360
             else:

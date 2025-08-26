@@ -483,24 +483,18 @@ class mesProcess:
             self.cursor.execute(update_task_complete_process_query)
             self.connection.commit()
 
-    def functionalPrinting(self, mqttTopic,filename): #filename loads the project file
+    def functionalPrinting(self, mqttTopic):
         processInfo = mqttTopic.split('/')
         task = processInfo[1]
         taskID = processInfo[0]
-
+        
         print('Starting functional printing')
 
-        #Compiles _mesFunctionalPrintingInit.py to include global variables
-        with open('_mesFunctionalPrintingInit.py', 'r', encoding='utf-8') as f:
-            code = compile(f.read(), '_mesFunctionalPrintingInit.py', 'exec')
-
-        #Adds global variables to _mesFunctionalPrintingInit.py
-        exec_globals = {
-            "__builtins__": __builtins__,  #needed so that global execution works
-            "file_to_process": filename,  #custom variable -> project file
-        }
-
-        exec(code, exec_globals) #execute _mesFunctionalPrintingInit.py with global variables
+        #Fixes UI issue - Doesnt get stuck on waiting to execute. Error happens due to overwriting threads and Ui refresh gap 
+        child = subprocess.Popen([sys.executable, "_mesFunctionalPrintingInit.py"])
+        while child.poll() is None:
+            schedule.run_pending()
+            self.mqttClient.loop(0.1)
         
         update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
             str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
@@ -512,28 +506,46 @@ class mesProcess:
         self.cursor.execute(update_task_complete_process_query)
         self.connection.commit()'''
 
-        print("Functional pritining complete")
+        print('Functional printing completed')
 
-    def dynamicMachining(self, mqttTopic, cncprognum='5333', fullSimTime=0.5):
+    def dynamicfunctionalPrinting(self, mqttTopic,filename): #filename loads the project file
         processInfo = mqttTopic.split('/')
         task = processInfo[1]
         taskID = processInfo[0]
 
-        with open('_mesDynamicMachiningInit.py', 'r', encoding='utf-8') as f:
-            code = compile(f.read(), '_mesDynamicMachiningInit.py', 'exec')
+        print('Starting dynamic functional printing')
 
-        #Adds global variables to _mesDynamicMachiningInit.py
-        exec_globals = {
-            "__builtins__": __builtins__,  #needed so that global execution works
-            "cnc_prog_number": cncprognum,  #custom variable -> CNC program number
-        }
+        printer = subprocess.Popen(["python.exe", "_mesDynamicFunctionalPrintingInit.py", filename])
+        while printer.poll() is None:
+            schedule.run_pending()
+            self.mqttClient.loop(0.1)
 
-        exec(code, exec_globals) #execute _mesDynamicMachiningInit.py with global variables 
-         
         update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
             str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
         self.cursor.execute(update_task_complete_process_query)
-        self.connection.commit()   
+        self.connection.commit()
+
+        '''update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
+            str(time.time()) + " WHERE id = " + str(taskID)
+        self.cursor.execute(update_task_complete_process_query)
+        self.connection.commit()'''
+
+        print("Dynamic Functional pritining complete")
+
+    def dynamicMachining(self, mqttTopic, cncprognum='5333', fullSimTime=0.5): #cncprognum is the address of the NC file in the mill
+        processInfo = mqttTopic.split('/')
+        task = processInfo[1]
+        taskID = processInfo[0]
+
+        machining = subprocess.Popen(["python.exe", "_mesDynamicMachiningInit.py", cncprognum])
+        while machining.poll() is None:
+            schedule.run_pending()
+            self.mqttClient.loop(0.1)
+
+        update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
+            str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
+        self.cursor.execute(update_task_complete_process_query)
+        self.connection.commit()
 
     # this command is generated within self.checkCurrentTask
     def resourceRelease(self, mqttTopic, resource, conveyorArg=None):

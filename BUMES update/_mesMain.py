@@ -376,12 +376,7 @@ class mesWebApp:
                     WARNING: If screens are added or removed, you must reflect this in the screens table
                     of the database AND change the hardcoded number of screens to check in the conditional below
                     '''
-                    counter = 0
-                    while self.activeScreens() != 5: #and counter != 20:
-                        # counter += 1
-                        # if counter == 10:
-                        #     print('One or more screens were unable to start successfully.')
-                        #     raise RuntimeError('One or more screens were unable to start successfully.')
+                    while self.activeScreens() != 5:
                         time.sleep(.5)
                 elif status == 'Starting_Quick-Simulation':
                     self.processQueue['Run Identifier'] = \
