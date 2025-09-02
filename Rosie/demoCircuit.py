@@ -12,10 +12,10 @@ from pickAndPlace import *
 # Import modular code from Ink Tracing file
 from inkTracing import *
 
-TEST_RUN = True #if True, no ink extrusion (dry run), else ink extrusion (wet run)
+TEST_RUN = False #if True, no ink extrusion (dry run), else ink extrusion (wet run)
 workdir = os.getcwd()
 circuitprintingdir = os.path.join(workdir,"Automated Circuit Printing and Assembly")
-projectfilefolder = os.path.join(circuitprintingdir,"Summer2025")
+projectfilefolder = os.path.join(circuitprintingdir,"Summer2025") #points to C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025
 
 # def get_most_recent_saved_file(folder):
 #     files = [os.path.join(folder, f) for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.endswith(".json")]
@@ -27,24 +27,24 @@ def main():
     """
     Main script loop - RUNS PROCESS TO ASSEMBLE DEMO CIRCUIT
     """
-    # test_BUMES_comms()
+    # test_BUMES_comms() #to check if BUMES can communicate efficiently with the custom script ensure software stack communication
     if len(sys.argv) > 1:
-        assemble(sys.argv[1]) #task status fails to update - stuck at running and waiting to execute
-        # test_BUMES_argument_transfer(sys.argv[1]) #task status updates when this function is run
+        assemble(sys.argv[1]) #tracing and assembly
+        # test_BUMES_argument_transfer(sys.argv[1]) #to check if BUMES can transfer/pass arguments/parameters to custom scripts
     else:
-        print("Project file not submitted, ensure functionalPrinting() has a parameter passed in BUMES")
+        print("Project file not submitted, ensure dynamicfunctionalPrinting() has a parameter passed in BUMES")
 
 def assemble(projfile):
     global TEST_RUN # Prevents python from being stupid >:(
     close_vice()
     # file_path = get_most_recent_saved_file(savefolder)
     file_path = os.path.join(projectfilefolder,projfile)
-    #Trace Wire -> Place Components -> Reinforce Connection
+    #Trace Wire -> Place Components -> Reinforce Connection (Workflow)
     ink_trace(file_path,TEST_RUN)
     pnpcomplete = PNP(file_path)
     if pnpcomplete:
         reinforcement_schematic = get_traces(file_path,reinforce=True)
-        reinforce_connection(reinforcement_schematic)
+        reinforce_connection(reinforcement_schematic,TEST_RUN)
 
     open_vice()
 

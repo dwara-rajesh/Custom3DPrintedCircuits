@@ -13,7 +13,7 @@ def runPythonScript(filename,cnc_program_num):
     # command = f'python.exe "{filename}" "{cnc_program_num}"' #passes the cnc program number as an argument to MaryDynamicCNCProgLoad.py
     command = ["python.exe",filename,cnc_program_num]
     print(command)
-    subprocess.run(command)
+    subprocess.run(command) #runs the MaryDynamicCNCProgLoad.py script in another terminal
     # os.system(command)
 
 if len(sys.argv) > 1:

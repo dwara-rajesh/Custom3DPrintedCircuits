@@ -43,7 +43,7 @@ wait_time = 0.4
 standby = [0.2683069106214198, -0.3272583283863385, 0.23585134091291987, -1.1211011736148604e-05, -3.1415181771835474, -3.8546943176232075e-05]
 
 z_origin_offset_from_sensor = 1.75 / 39.37 #z distance from calibration sensor to top of vise + clearnace (convert in to m)
-top_right_vise = [0.27591455175868757,-0.3373095135474149, z_origin_offset_from_sensor] #obtained manually using precision tip and moving robot around
+top_right_vise = [0.27591455175868757,-0.3373095135474149, z_origin_offset_from_sensor] #obtained x and y position manually using precision tip and moving robot around
 admlviceblock_yoff = 0.486 / 39.37 #convert in to m
 
 # Calibration data location and memory [CWD is "C:\git\ADML"]
@@ -54,6 +54,7 @@ CALIBRATION_DATA = {'vac': None,
 # Tray component data location and memory [CWD is "C:\git\ADML"]
 COMPONENT_TRAY_FILEPATH = "tray_data.txt"
 
+#the height of the components in mm for pick N place for z offset from origin (top right of vise block - the adml_y_value)
 COMPONENT_HEIGHTS = { #in mm
     'battery': 1.6,
     'button': 8.6,

@@ -13,7 +13,7 @@ def runPythonScript(filename,schematic_file):
     # command = f'python.exe "{filename}" "{schematic_file}"' #passes the project file as an argument to demoCircuit.py
     command = ["python.exe",filename,schematic_file]
     print(command)
-    subprocess.run(command)
+    subprocess.run(command) #runs the demoCircuit.py script in another terminal
     # os.system(command)
 
 if len(sys.argv) > 1:

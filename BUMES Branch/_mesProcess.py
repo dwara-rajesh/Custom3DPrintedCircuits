@@ -29,7 +29,7 @@ class mesProcess:
 
         self.runID, self.user, self.runType, self.operationName = \
             _mesScreen.unpackSTY()
-
+        
         # this will be used to get the list of tasks
         self.processName = \
             self.operationName.split('_')[0]
@@ -45,7 +45,7 @@ class mesProcess:
         self.db_connect()
 
         self.initMQTT()
-
+        
         # Arg parsing for debugging mode:
         # If debugging mode is enabled, copy sys.stdout content to .txt file in ./debug
         if len(sys.argv) > 1:
@@ -53,7 +53,7 @@ class mesProcess:
                 debugFilename = './debug/' + self.runID + '~' + self.processName + '~' + self.operationName + '.txt'
                 sys.stdout = open(debugFilename, 'w')
                 print('Now printing to file!')
-
+        
         print('Just before task dict')
         self.createTaskDict()
         # self.publishoperationTasks()
@@ -80,7 +80,7 @@ class mesProcess:
             password='buADML@2021',
             database="bumes",
         )
-
+                
         # Why three cursors 0,0
         self.cursor = self.connection.cursor()
         self.cursor1 = self.connection.cursor(buffered = True)
@@ -109,7 +109,7 @@ class mesProcess:
                     else:
                         try:
                             task = task.split('//')[0] # remove inline comments
-                        except:
+                        except: 
                             pass # no inline comments
                         task = task.strip() # remove leading or trailing whitespace left by the comment
                         # print('TASK:',repr(task)) ### FOR DEBUGGING
@@ -148,8 +148,8 @@ class mesProcess:
 
         '''
         WARNING: If the database has been wiped and IDs are reset to incrementing from 1, the first process you run may have its first task
-        overwritten by the following insertion IF it is missing a startupTasksComplete() command. This is because since IDs are permanent even
-        after clearing records, we add the startupTasksComplete() command in with ID of 1 to ensure it is run FIRST. But if the database has been
+        overwritten by the following insertion IF it is missing a startupTasksComplete() command. This is because since IDs are permanent even 
+        after clearing records, we add the startupTasksComplete() command in with ID of 1 to ensure it is run FIRST. But if the database has been 
         wiped, it will overrite the first task of the first process/operation being run. You can simply run a quick-sim to increment the DB IDs enough
         to start another process with no issues.
 
@@ -233,32 +233,32 @@ class mesProcess:
         self.mqttClient.message_callback_add(
             'resourceHandler/response/resourceSeize/' + self.processName + '/#', \
             self.outcomeSeize)
-
+        
         self.mqttClient.message_callback_add(
             'system/status', \
             self.systemStatusCallback)
-
+       
         self.mqttClient.message_callback_add(
             'urHandler/outcome/#', \
             self.outcomeUrDashboard)
-
+       
         self.mqttClient.message_callback_add(
             'cncHandler/outcome/#', \
             self.outcomeCncRun)
-
+        
         self.mqttClient.message_callback_add(
             'visionHandler/outcome/#', \
             self.outcomeVisionInspection)
-
+       
         self.mqttClient.connect('localhost', 1883)
 
-    def onConnect(self, client, userdata, flags, rc):
+    def onConnect(self, client, userdata, flags, rc):        
         self.mqttClient.subscribe('system/#')
-
+        
         self.mqttClient.subscribe('urHandler/outcome/'+self.processName+'/#')
 
         self.mqttClient.subscribe('resourceHandler/response/resourceSeize/' + self.processName + '/#')
-
+        
         # FIX MQTT TOPICS FOR PROCESS NAME
         self.mqttClient.subscribe('cncHandler/outcome/'+self.operationName+'/#')
         # FIX MQTT TOPICS FOR PROCESS NAME
@@ -298,7 +298,7 @@ class mesProcess:
             # Ex. command = ['self.resourceSeize','Rosie)']
             command = command.split('(')
 
-            # Generate additional task argument
+            # Generate additional task argument 
             mqttArgument = "('" + id + "/" + task + "/" + self.operationName + "',"
 
             # insert the additional argument and join the string back together
@@ -308,7 +308,7 @@ class mesProcess:
             # join the list back into a single string
             # Ex. command = 'self.resourceSeize(processA_1of2/task_3,Rosie)'
             command = ''.join(command)
-
+                
             if isTaskExecuting == False:
                 update_task_process_query = "UPDATE process_handler SET task_executing = True, start_time = '" + \
                     str(time.time()) + "' WHERE id = " + id
@@ -316,7 +316,7 @@ class mesProcess:
                 self.cursor2.execute(update_task_process_query)
                 self.connection.commit()
                 self.flagDashboard()
-
+                    
                 # this message and topic appear on the fmc overview page (index.hmtl)
                     # Not used for any actual process execution.
                 if 'endProcess' not in command:
@@ -353,7 +353,7 @@ class mesProcess:
 
                 elapsedTime = 'Executing, Elapsed Time ' + str(elapsedTime) + ' seconds'
 
-                # Waiting timestamp, for visualization on index.html.
+                # Waiting timestamp, for visualization on index.html. 
                     # Not used for any actual process execution.
                 self.mqttClient.publish(
                     'process/' + \
@@ -370,6 +370,13 @@ class mesProcess:
 
             elif self.isTaskComplete(id):
                 # Task is complete, move on to check next task status
+                self.flagDashboard()
+                self.mqttClient.publish(
+                    'process/' + \
+                    self.processName + '/' + \
+                    str(self.operationName) + '/' + \
+                    str(task), \
+                    rawCommand+'/SUCCESS')
                 pass
 
     def isTaskComplete(self, id):
@@ -403,7 +410,7 @@ class mesProcess:
 
         self.cursor.execute(select_isSeized_resource_query)
         result = self.cursor.fetchall()
-
+        
         return result[0][0]
 
     # this command is generated within self.checkCurrentTask
@@ -424,7 +431,7 @@ class mesProcess:
 
         self.cursor.execute(select_type_resource_query)
         result = self.cursor.fetchall()
-
+        
         if self.isSeized(resource) == 0:
             # Update resource table seized and usedBy field for currently selected resource
             update_isSeized_usedBy_resource_query = "UPDATE resource_handler SET isSeized = True, usedBy = '" + \
@@ -447,7 +454,7 @@ class mesProcess:
 
             self.cursor.execute(update_task_complete_process_query)
             self.connection.commit()
-
+            
             print(datetime.datetime.now(),self.processName,task,resource,conveyorArg,'\t\tSeize Request GRANTED.')
 
         elif self.isSeized(resource) == 1:
@@ -467,17 +474,17 @@ class mesProcess:
     def outcomeSeize(self, client, userdata, msg):
         print('Running outcome seized callback!')
         msg = msg.topic.split('/')
-
+        
         task = msg[-3:][0]
         resource = msg[-2:][0]
         outcome = msg[-1:][0]
         outcome = True if outcome == 'GRANTED' else False
 
-
-
+        
+        
         if outcome == True:
             print(datetime.datetime.now(),self.processName,task,resource,'\t\tSeize Request GRANTED.')
-
+            
             update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
                 str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
             self.cursor.execute(update_task_complete_process_query)
@@ -489,12 +496,14 @@ class mesProcess:
         taskID = processInfo[0]
         
         print('Starting functional printing')
+        
+        exec(open('_mesFunctionalPrintingInit.py').read())
 
         #Fixes UI issue - Doesnt get stuck on waiting to execute. Error happens due to overwriting threads and Ui refresh gap 
-        child = subprocess.Popen([sys.executable, "_mesFunctionalPrintingInit.py"])
-        while child.poll() is None:
-            schedule.run_pending()
-            self.mqttClient.loop(0.1)
+        # child = subprocess.Popen([sys.executable, "_mesFunctionalPrintingInit.py"])
+        # while child.poll() is None:
+        #     schedule.run_pending()
+        #     self.mqttClient.loop(0.1)
         
         update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
             str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
@@ -509,17 +518,19 @@ class mesProcess:
         print('Functional printing completed')
 
     def dynamicfunctionalPrinting(self, mqttTopic,filename): #filename loads the project file
-        processInfo = mqttTopic.split('/')
-        task = processInfo[1]
-        taskID = processInfo[0]
+        processInfo = mqttTopic.split('/') #gets info of process using the mqttTopic client from the process_handler database
+        task = processInfo[1] #task name
+        taskID = processInfo[0] #task ID
 
-        print('Starting dynamic functional printing')
+        print('Starting dynamic functional printing') #log to test
 
-        printer = subprocess.Popen(["python.exe", "_mesDynamicFunctionalPrintingInit.py", filename])
-        while printer.poll() is None:
-            schedule.run_pending()
-            self.mqttClient.loop(0.1)
+        #opens another python terminal to run _mesDynamicFunctionalPrintingInit.py to run BUMES frontend and custom functions simultaneously
+        printer = subprocess.Popen(["python.exe", "_mesDynamicFunctionalPrintingInit.py", filename]) 
+        while printer.poll() is None: #checks if the _mesDynamicFunctionalPrintingInit.py is complete, until complete
+            schedule.run_pending() #refresh UI, and schedule to update
+            self.mqttClient.loop(0.1) #read process information
 
+        #After the custom functions/scripts finish running, update the process_handler database to inform the system that the task has been executed
         update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
             str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
         self.cursor.execute(update_task_complete_process_query)
@@ -533,19 +544,26 @@ class mesProcess:
         print("Dynamic Functional pritining complete")
 
     def dynamicMachining(self, mqttTopic, cncprognum='5333', fullSimTime=0.5): #cncprognum is the address of the NC file in the mill
-        processInfo = mqttTopic.split('/')
-        task = processInfo[1]
-        taskID = processInfo[0]
+        processInfo = mqttTopic.split('/') #gets info of process using the mqttTopic client from the process_handler database
+        task = processInfo[1] #task name
+        taskID = processInfo[0] #task ID
 
+        #opens another python terminal to run _mesDynamicMachiningInit.py to run BUMES frontend and custom functions simultaneously
         machining = subprocess.Popen(["python.exe", "_mesDynamicMachiningInit.py", cncprognum])
-        while machining.poll() is None:
-            schedule.run_pending()
-            self.mqttClient.loop(0.1)
+        while machining.poll() is None: #checks if the _mesDynamicMachiningInit.py is complete, until complete
+            schedule.run_pending() #refresh UI, and schedule to update
+            self.mqttClient.loop(0.1) #read process information
 
+        #After the custom functions/scripts finish running, update the process_handler database to inform the system that the task has been executed
         update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
             str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
         self.cursor.execute(update_task_complete_process_query)
         self.connection.commit()
+
+        '''update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
+            str(time.time()) + " WHERE id = " + str(taskID)
+        self.cursor.execute(update_task_complete_process_query)
+        self.connection.commit()'''
 
     # this command is generated within self.checkCurrentTask
     def resourceRelease(self, mqttTopic, resource, conveyorArg=None):
@@ -588,7 +606,7 @@ class mesProcess:
                 self.mqttClient.publish(outcomeTopic)
         else:
             self.mqttClient.publish(outcomeTopic)
-
+        
     def startupTasksComplete(self, mqttTopic):
         messageTopic = 'mesBackend/startup/' + mqttTopic
         task = mqttTopic.split('/')[1]
@@ -603,7 +621,7 @@ class mesProcess:
     def scheduleFullSimTask(self,task,simTime=0.5):
         self.currentTaskFullSim = task
         schedule.every(simTime).seconds.do(self.executeFullSimTask)
-
+    
     def executeFullSimTask(self):
         update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
             str(time.time()) + " WHERE task_name = '" + self.currentTaskFullSim + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
@@ -615,7 +633,7 @@ class mesProcess:
     def urDashboard(self, mqttTopic, robot, urpFile, fullSimTime=0.5):
         # mqttTopic is example: 1of3/task_3
         # It used to contain the process name in the first index, since operation was previously joined to this
-        # This was changed when DB was implemented and now only has the operation number,
+        # This was changed when DB was implemented and now only has the operation number, 
         # which conflicts with other processes running
 
         topic = mqttTopic.split('/')
@@ -631,16 +649,16 @@ class mesProcess:
                 self.processName + "', '" + self.operationName + "', '" + task + "', '" + robot + "', '" + urpFile + "', " + taskID + ", False, False)"
 
             self.cursor.execute(insert_task_data_handler_query)
-            self.connection.commit()
-
+            self.connection.commit()     
+               
             self.scheduleFullSimTask(task,fullSimTime)
         elif self.runType == 'QuickSim':
-
+            
             update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
                 str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
             self.cursor.execute(update_task_complete_process_query)
             self.connection.commit()
-
+        
         elif self.runType == 'RealRun':
             # mqttTopic is example: BCordganizerLid/1of3/task_3
             # the full message topic is therefore urHandler/request/BCordganizerLid/1of3/task_3
@@ -660,7 +678,7 @@ class mesProcess:
         # it will have the full topic name of urHandler/request/BCordganizerLid/1of3/task_3, for example
         taskID = msg.topic.split('/')[0]
         task = (msg.topic.split('/'))[-1]  # returns 'task_3'
-        if msg.payload.decode() == 'SUCCESS':
+        if msg.payload.decode() == 'SUCCESS':          
             update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
                 str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
             self.cursor.execute(update_task_complete_process_query)
@@ -691,7 +709,7 @@ class mesProcess:
                     "' AND operation_name = '" + self.operationName + "'"
             self.cursor.execute(update_task_complete_process_query)
             self.connection.commit()
-
+        
         elif self.runType == 'RealRun':
             taskID = mqttTopic.split('/')[0]
             task = mqttTopic.split('/')[1]
@@ -708,7 +726,7 @@ class mesProcess:
             print('PASSED ADDING HANDLER REQUEST')
 
             self.mqttClient.publish(mqttTopic)
-
+    
     def outcomeCncRun(self, client, userdata, msg):
         print('CNC OUTCOME MESSAGE RECEIVED')
         #when a message comes back with topic urHandler/outcome/#
@@ -725,7 +743,7 @@ class mesProcess:
         if self.runType == 'FullSim':
             task = mqttTopic.split('/')[1]
             self.scheduleFullSimTask(task,fullSimTime)
-
+        
         elif self.runType == 'QuickSim':
             task = mqttTopic.split('/')[1]
 
@@ -733,7 +751,7 @@ class mesProcess:
                 str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
             self.cursor.execute(update_task_complete_process_query)
             self.connection.commit()
-
+        
         elif self.runType == 'RealRun':
             # mqttTopic is example: testURP_1of3/task_3
             # the full message topic is therefore urHandler/request/testURP_1of3/task_3
@@ -745,7 +763,7 @@ class mesProcess:
         # when a message comes back with topic urHandler/outcome/#
         # it will have the full topic name of urHandler/request/testURP_1of3/task_3, for example
         task = (msg.topic.split('/'))[-1]  # returns 'task_3'
-
+        
         update_task_complete_process_query = "UPDATE process_handler SET task_complete = True, end_time = " + \
             str(time.time()) + " WHERE task_name = '" + task + "' AND process_name = '" + self.processName + "' AND operation_name = '" + self.operationName + "'"
         self.cursor.execute(update_task_complete_process_query)
