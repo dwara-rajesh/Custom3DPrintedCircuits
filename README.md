@@ -84,12 +84,16 @@ This system introduces students to automated manufacturing and assembly while pu
 ---
 
 ## 📷 Gallery  
-Application, Automated CAD & CAM
+Application, Automated CAD & CAM: 
 https://drive.google.com/file/d/1Dc_Gp6TNuDpbt4n_A52WViqfs1KLvuOW/view?usp=drive_link
 
-Outputs
-![machinedpieces](https://github.com/user-attachments/assets/c3118721-e237-4059-9362-dfb90fed45b6)
-![assembled](https://github.com/user-attachments/assets/2631d9f6-ff4d-47fc-a49e-4ceb22cce408)
+Outputs: Assembly/Pick-N-Place
+https://drive.google.com/file/d/1F0wVgRpb4WsJAGOhotOK_g7qnaFQ4t_g/view?usp=drive_link
+![machinedpiecesgit](https://github.com/user-attachments/assets/6bb27599-96c0-47f5-bc45-36459b41e17c)
+![assembledgit](https://github.com/user-attachments/assets/c995fb4f-f565-4277-94ff-5b235d543600)
+
+Outputs: Ink Tracing
+https://drive.google.com/file/d/10Jt-MQlTJDNQ9XNLLwXadmoF7CF8jco3/view?usp=drive_link
 
 ---
 
