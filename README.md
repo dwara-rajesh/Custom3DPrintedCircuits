@@ -92,7 +92,7 @@ https://drive.google.com/file/d/1F0wVgRpb4WsJAGOhotOK_g7qnaFQ4t_g/view?usp=drive
 ![machinedpiecesgit](https://github.com/user-attachments/assets/6bb27599-96c0-47f5-bc45-36459b41e17c)
 ![assembledgit](https://github.com/user-attachments/assets/c995fb4f-f565-4277-94ff-5b235d543600)
 
-Outputs (Ink Tracing):
+Outputs (Ink Tracing):<br>
 https://drive.google.com/file/d/10Jt-MQlTJDNQ9XNLLwXadmoF7CF8jco3/view?usp=drive_link
 
 ---
