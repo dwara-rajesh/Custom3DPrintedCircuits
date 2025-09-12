@@ -84,12 +84,13 @@ This system introduces students to automated manufacturing and assembly while pu
 ---
 
 ## 📷 Gallery  
-(Add screenshots or GIFs here of the application, CAD/CAM outputs, and integration testing.)  
+Application, Automated CAD & CAM
+https://drive.google.com/file/d/1Dc_Gp6TNuDpbt4n_A52WViqfs1KLvuOW/view?usp=drive_link
+
+Outputs
+![machinedpieces](https://github.com/user-attachments/assets/c3118721-e237-4059-9362-dfb90fed45b6)
 ![assembled](https://github.com/user-attachments/assets/2631d9f6-ff4d-47fc-a49e-4ceb22cce408)
 
 ---
 
-## 👤 Author  
-**Dwarakesh Rajesh**  
-Summer Internship 2025 – Autonomous Manufacturing & Assembly  
 
