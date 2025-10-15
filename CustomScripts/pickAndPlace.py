@@ -378,7 +378,7 @@ def PNP_Test(): #to test yield for new vacuum heads, ENSURE ALL SLOTS ARE FILLED
             place_component(pos[:3],0) #place back into slot
     return_nozzle() #return nozzle
 # Test Pick N Place Module
-# PNP(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\finalSendToMill.json")
+# PNP(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\sendToMill.json")
 #YieldTest
 # PNP_Test()
 #Flex Resin
