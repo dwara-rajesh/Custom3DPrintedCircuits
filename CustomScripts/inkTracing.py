@@ -100,7 +100,6 @@ def printink(terminal_pos, terminal_component, terminal_polarity,print_pressure=
         set_pressure(ATMOSPHERE) #no ink is extruded
     else: 
         set_pressure(print_pressure) #ink is extruded
-
     ink_on()
     time.sleep(primer_delay)
 
@@ -329,6 +328,8 @@ def ink_trace(file_path,dry_run=True):
     return_inkprinter()
 
 #Test InkTracing Module
-# ink_trace(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\sendToMill1.json",dry_run=True)
-# reinforcement_schematic = get_traces(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\sendToMill1.json",reinforce=True)
-# reinforce_connection(reinforcement_schematic,dry_run=True)
+# testing_run = False # False if extrusion, true if dry run
+# ink_trace(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\sendToMill2.json",dry_run=testing_run)
+# reinforcement_schematic = get_traces(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\sendToMill2.json",reinforce=True)
+# reinforce_connection(reinforcement_schematic,dry_run=testing_run)
+
