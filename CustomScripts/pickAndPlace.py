@@ -18,7 +18,7 @@ origin_in_m_vac = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_orig
 origin_vac = [val * 1000 for val in origin_in_m_vac[:3]] + [0,math.pi,0] #origin in mm
 tip_offset_from_gripper = 1.1705 * 25.4 #nozzle offset from center of gripper (convert in to mm)
 #global variables for pickup status checking
-pickupfailed = False 
+pickupfailed = False
 pickedup = False
 
 # Placeholder for component stock index tracking (To account for depletion of tray components)
@@ -238,7 +238,7 @@ def place_component(target_pos,rot, heaven=0.4318552510405578,print_log=False):
     jointangles = rtde_receive.getActualQ() #get joint angles of robot
 
     #rotate the last joint/gripper to orient the component as per schematic/circuit diagram
-    initialjoint = jointangles[5] 
+    initialjoint = jointangles[5]
     jointangles[5] += rot
     rtde_control.moveJ(jointangles)
 
@@ -300,7 +300,7 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
     for component in schematic: #go through each component in schematic
         index = 0 #start from first slot in components tray in the pickup section
         grid = COMPONENTS[component['type']]['grid']
-        maxindex = grid[0] * grid[1] 
+        maxindex = grid[0] * grid[1]
         while index in placed_components[component['type']]: #check if slot has already been visited
             index += 1 #move to next slot
         if index >= maxindex: #if the slot number is more than last slot number, inventory empty
@@ -312,11 +312,11 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
         if pickupfailed:
             return False
         else: #if inventory not empty
-            if print_log == True: #log pickup 
+            if print_log == True: #log pickup
                 with open(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\rosie_pnp_log.txt", "a") as file:
                     file.write(f"Pick-and-Place: {part_num}/{len(schematic)}\nPicking up {component['type']} #{index + 1} from {component['type']} inventory grid\n")
                 print(f"Pick-and-Place: {part_num}/{len(schematic)}\nPicking up {component['type']} #{index + 1} from {component['type']} inventory grid")
-            pickup_failure = pickup_component(component['type'], index,print_warnings=print_log,print_log=print_log) #pickup component 
+            pickup_failure = pickup_component(component['type'], index,print_warnings=print_log,print_log=print_log) #pickup component
             if pickup_failure: #if failed, inventory empty
                 if print_log:
                     with open(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\rosie_pnp_log.txt", "a") as file:
@@ -324,7 +324,7 @@ def circuit_pick_and_place(schematic, cycle_vice=False, print_log=False):
                     print(f"ComponentInventory ERROR: {component['type']} inventory is empty! Please refill")
                 return False
             else: #if success
-                if print_log: #log placing 
+                if print_log: #log placing
                     with open(r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\rosie_pnp_log.txt", "a") as file:
                         file.write(f"Placing component [{component['type']}] in Coordinates: {component['pos']}\n")
                     print(f"Placing component [{component['type']}] in Coordinates: {component['pos']}")
