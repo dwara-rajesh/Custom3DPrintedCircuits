@@ -18,14 +18,14 @@ from coreModule import *
 PRINT_SPEED = 0.1 # [m/s] Linear speed of the printer head when extruding ink - Original value: 0.15m/s
 PRINT_SPEED_HALF = PRINT_SPEED / 2
 PRINT_SPEED_SLOW = 0.02
-PRINT_PRESSURE = 45 # [psi] Pressure of the pneumatic extrusion line - Original value: 70psi
+PRINT_PRESSURE = 30 # [psi] Pressure of the pneumatic extrusion line - Original value: 70psi
 PRIMER_DELAY = 0.360 # [s] Delay in seconds that the printer waits before starting to move to allow ink time to flow through the nozzle
 PRINT_ACCEL = 0.8 # Printing uses reduced acceleration to avoid breaking the traces
 DRY_RUN = True
 angle = 0
 
 load_calibration_data() #obtain calibration data after calibration is complete
-z_origin_ink = CALIBRATION_DATA['ink'][2] + top_right_vise[2] - 0.002 #offset the origin by calibration data to avoid hitting the vise AND 0.002 offset to prevent ink from curling at tip
+z_origin_ink = CALIBRATION_DATA['ink'][2] + top_right_vise[2] #offset the origin by calibration data to avoid hitting the vise
 origin_in_m_ink = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_origin_ink, 0, math.pi, 0] #top right corner of stock on vice in rosie station in meters
 origin_ink = [val * 1000 for val in origin_in_m_ink[:3]] + [0,math.pi,0] #origin in mm
 
@@ -37,8 +37,8 @@ meander_square_size = {"battery":0.095,
 #in inches - the size of reinforements
 reinforcements = {
     "battery": [0.375,0.375], #(l = radius of battery, w = radius of battery)
-    "button": [0.45,0.7], #(l = length of meander, w = width of meander) 
-    "led": [0.05,0.05] #(l = length of meander, w = width of meander) 
+    "button": [0.45,0.7], #(l = length of meander, w = width of meander)
+    "led": [0.05,0.05] #(l = length of meander, w = width of meander)
 }
 wire_schematic = []
 def clear_tip(delay=1.0):
@@ -98,7 +98,7 @@ def get_traces(recentsavefilepath,reinforce=False):
 def printink(terminal_pos, terminal_component, terminal_polarity,print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY):
     if DRY_RUN == True:
         set_pressure(ATMOSPHERE) #no ink is extruded
-    else: 
+    else:
         set_pressure(print_pressure) #ink is extruded
     ink_on()
     time.sleep(primer_delay)
@@ -140,7 +140,7 @@ def meander_terminal(centre, component, k=3,speed=0.005, reinforce=False):
         for i in range(k*2):
             endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]] #move to next position
             rtde_control.moveL(endpos,speed=speed)
-            if i % 2 == 0: 
+            if i % 2 == 0:
                 next_y = next_y + y_step #move to next layer
             else:
                 if next_x == end_x: #move to other end
@@ -201,9 +201,9 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     Terminal1button = {}
     Terminal2button = {}
     positive_battery_terminal_pos = {}
-    for wire in reinforced_wire_schematic: #for each wire in schematic 
+    for wire in reinforced_wire_schematic: #for each wire in schematic
         for node in wire: #for each node in wire
-            if node['comp'] == "battery" and node['batteryneg'] == "p": 
+            if node['comp'] == "battery" and node['batteryneg'] == "p":
                 positive_battery_terminal_pos.update({node['comp_id']: node['pos']+[0,pi,0]}) #get positive terminals of all batteries present in circuit
             if node['comp'] == "button": #get all terminals of all buttons in schematic
                 key = node['comp_id']
@@ -214,17 +214,17 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         Terminal2button.update({node['comp_id']: node['pos'][:2]})
                 else:
                     Terminal1button.update({node['comp_id']: node['pos'][:2]})
-    
+
     for wire in reinforced_wire_schematic: #for each wire in schematic
         for i,node in enumerate(wire): #for each node in wire
             if (i==0 or i==len(wire) - 1) and node['comp'] != "battery": #if last or first node and component is not battery
-                nodepos = node['pos']+[0,pi,0] 
+                nodepos = node['pos']+[0,pi,0]
                 rtde_control.moveL(nodepos, speed=slow) #go to position
                 if not DRY_RUN:
                     set_pressure(PRINT_PRESSURE)
                     ink_on()
                     time.sleep(PRIMER_DELAY)
-                
+
                 if node['comp'] == "button": #if component is button
                     key = node['comp_id']
                     x_button_diff = Terminal1button[key][0] - Terminal2button[key][0] #determine oreintation of button
@@ -233,7 +233,7 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         temp = reinforcements['button'][0]
                         reinforcements['button'][0] = reinforcements['button'][1]
                         reinforcements['button'][1] = temp
-   
+
                 meander_terminal(nodepos, node['comp'],reinforce=True) #meander
                 ink_off() #switch of ink
                 #Reset change of oreintation in reinforcement rectangle
@@ -269,7 +269,7 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         angle = 180
 
                 radius = reinforcements['battery'][0]/39.37
-                minangle = angle - 120  
+                minangle = angle - 120
                 minangle = math.radians(minangle)
                 #determine start_x,start_y, move to start_x,start_y
                 start_x = (radius * math.cos(minangle)) + nodepos[0]
@@ -313,7 +313,7 @@ def ink_trace(file_path,dry_run=True):
         for i,node in enumerate(wire): #for each node in wire
             nodepos = node['pos']+[0,pi,0] #get node position
             if i==0: #if first node of wire
-                rtde_control.moveL(nodepos, speed=fast) #move to position 
+                rtde_control.moveL(nodepos, speed=fast) #move to position
                 printink(terminal_pos=nodepos,terminal_component=node['comp'], terminal_polarity=node['batteryneg']) #print ink
             else:
                 move_to_node(pos=nodepos,comp=node['comp'],pole=node['batteryneg'],index=i,maxindex=len(wire) - 1) #else move to node
