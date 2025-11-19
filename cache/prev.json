@@ -15,19 +15,7 @@
         {
             "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\battery.obj",
             "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\battery.f3d",
-            "posX": -0.5,
-            "posY": -1.0,
-            "dimX": 0,
-            "dimY": 0,
-            "dimZ": 0,
-            "rotX": 0,
-            "rotY": 0,
-            "rotZ": 90
-        },
-        {
-            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\button.obj",
-            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\button.f3d",
-            "posX": -2.5,
+            "posX": -1.0,
             "posY": -1.0,
             "dimX": 0,
             "dimY": 0,

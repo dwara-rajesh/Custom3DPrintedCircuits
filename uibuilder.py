@@ -618,7 +618,7 @@ class Manual(QDialog):
         self.resize(600,600)
         rulelayout = QVBoxLayout(self)
         rules = [
-            "> Ctrl + Z - Undo the most recent modification"
+            "> Ctrl + Z - Undo the most recent modification",
             "> Left Click - Select Models & Wire Nodes",
             "> Shift + Left Click - Multi-select wire nodes",
             "> After selecting model",
