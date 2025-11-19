@@ -63,6 +63,39 @@
                 }
             ],
             "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -1.75,
+                    "posY": -1.1378,
+                    "component": "LED",
+                    "componentid": 1,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.75,
+                    "posY": -1.5312,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.0,
+                    "posY": -1.5312,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.0,
+                    "posY": -1.0,
+                    "component": "battery",
+                    "componentid": 0,
+                    "batteryneg": "n"
+                }
+            ],
+            "pole": "n"
         }
     ]
 }
