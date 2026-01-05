@@ -250,21 +250,20 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                     ink_on()
                     time.sleep(PRIMER_DELAY)
 
-                if node['comp'] == "button": #if component is button
-                    key = node['comp_id']
-                    x_button_diff = Terminal1button[key][0] - Terminal2button[key][0] #determine oreintation of button
-                    if x_button_diff != 0:
-                        #adjust oreintation of meander or reinforcement rectangle
-                        temp = reinforcements['button'][0]
-                        reinforcements['button'][0] = reinforcements['button'][1]
-                        reinforcements['button'][1] = temp
-
-                    meander_terminal(nodepos, node['comp'],reinforce=True) #meander
-                    ink_off() #switch off ink
-                    #Reset change of oreintation in reinforcement rectangle
+                key = node['comp_id']
+                x_button_diff = Terminal1button[key][0] - Terminal2button[key][0] #determine oreintation of button
+                if x_button_diff != 0:
+                    #adjust oreintation of meander or reinforcement rectangle
                     temp = reinforcements['button'][0]
                     reinforcements['button'][0] = reinforcements['button'][1]
                     reinforcements['button'][1] = temp
+
+                meander_terminal(nodepos, node['comp'],reinforce=True) #meander
+                ink_off() #switch off ink
+                #Reset change of oreintation in reinforcement rectangle
+                temp = reinforcements['button'][0]
+                reinforcements['button'][0] = reinforcements['button'][1]
+                reinforcements['button'][1] = temp
 
                 node_z_heaven = nodepos[2] + 50/1000 #Move to heaven (mm to m)
                 current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
