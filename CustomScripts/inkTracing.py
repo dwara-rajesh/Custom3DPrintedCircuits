@@ -30,15 +30,14 @@ origin_in_m_ink = [top_right_vise[0],top_right_vise[1]-admlviceblock_yoff,z_orig
 origin_ink = [val * 1000 for val in origin_in_m_ink[:3]] + [0,math.pi,0] #origin in mm
 
 #in inches - the size of solder/meander square
-meander_square_size = {"battery":0.095,
-                  "microcontroller":0.035,
-                  "button":0.095,
-                  "led":0.035}
+meander_square_size = {"battery":0.045,
+                  "microcontroller":0.015,
+                  "button":0.045,
+                  "led":0.015}
 #in inches - the size of reinforements
 reinforcements = {
     "battery": [0.375,0.375], #(l = radius of battery, w = radius of battery)
-    "button": [0.45,0.7], #(l = length of meander, w = width of meander) 
-    "led": [0.05,0.05] #(l = length of meander, w = width of meander) 
+    "button": [0.45,0.7], #(l = length of meander, w = width of meander)
 }
 wire_schematic = []
 def clear_tip(delay=1.0):
@@ -90,6 +89,14 @@ def get_traces(recentsavefilepath,reinforce=False):
 
             nodes.append({"pos":[nodeX,nodeY,nodeZ], "comp": component, "batteryneg": batteryneg, "comp_id": id}) #populate in a set for later usage
 
+        if len(nodes) > 1 and not reinforce:
+            first_node = nodes[0]
+            last_node = nodes[-1]
+            if first_node['batteryneg'] == "p":
+                nodes.remove(first_node)
+            elif last_node['batteryneg'] == "p":
+                nodes.remove(last_node)
+
         wiring_schematic.append(nodes)
 
     return wiring_schematic
@@ -98,7 +105,7 @@ def get_traces(recentsavefilepath,reinforce=False):
 def printink(terminal_pos, terminal_component, terminal_polarity,print_pressure=PRINT_PRESSURE, primer_delay=PRIMER_DELAY):
     if DRY_RUN == True:
         set_pressure(ATMOSPHERE) #no ink is extruded
-    else: 
+    else:
         set_pressure(print_pressure) #ink is extruded
     ink_on()
     time.sleep(primer_delay)
@@ -106,53 +113,12 @@ def printink(terminal_pos, terminal_component, terminal_polarity,print_pressure=
     if terminal_component != "battery" or terminal_polarity == "n": #if component is not battery or if the terminal component is battery and is a negative terminal
         meander_terminal(terminal_pos,terminal_component) #then meander
 
-def meander_terminal(centre, component, k=3,speed=0.005, reinforce=False):
+def meander_terminal(centre, component, k=3,speed=0.01, reinforce=False):
     global angle
     component = component.lower()
-    if reinforce and component == "battery":
-        pass
-    else:
-        '''
-        Meander is a zig zag motion of sorts, if k = 3
-                        end_x,end_y
-            |-------------->|
-            |<--------------|
-            --------------->| y_step
-        start_x,start_y
-        '''
-        #determine start_x,start_y
-        start_x = centre[0] - (meander_square_size[component]*0.5/39.37)
-        start_y = centre[1] - (meander_square_size[component]*0.5/39.37)
-
-        #determine end_x,end_y
-        end_x = centre[0] + (meander_square_size[component]*0.5/39.37)
-        end_y = centre[1] + (meander_square_size[component]*0.5/39.37)
-
-        #determine y_step
-        y_step = ((end_y - start_y) / k)
-
-        startpos = [start_x,start_y,centre[2],centre[3],centre[4],centre[5]]
-        rtde_control.moveL(startpos,speed=speed) #move to start position
-        #get next position
-        next_x = end_x
-        next_y = start_y
-        #meander
-        for i in range(k*2):
-            endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]] #move to next position
-            rtde_control.moveL(endpos,speed=speed)
-            if i % 2 == 0: 
-                next_y = next_y + y_step #move to next layer
-            else:
-                if next_x == end_x: #move to other end
-                    next_x = start_x
-                else:
-                    next_x = end_x
-        #return to centre position of meander after meandering
-        rtde_control.moveL(centre,speed=speed)
-
-    if reinforce: #if reinforcement is on
+    if reinforce:
+        speed = 0.005
         k = 10 #increase the layers from 3 to 10
-        component = component.lower()
         if component == "battery": #if battery, draw an arc to secure placement
             radius = reinforcements[component][0]/39.37
             #range is basically angle-120 -> angle + 120, so arc angle is 240 but 120 on either side of the middle
@@ -190,6 +156,44 @@ def meander_terminal(centre, component, k=3,speed=0.005, reinforce=False):
                         next_x = end_x
 
             rtde_control.moveL(centre,speed=speed)
+    else:
+        '''
+        Meander is a zig zag motion of sorts, if k = 3
+                        end_x,end_y
+            |-------------->|
+            |<--------------|
+            --------------->| y_step
+        start_x,start_y
+        '''
+        #determine start_x,start_y
+        start_x = centre[0] - (meander_square_size[component]*0.5/39.37)
+        start_y = centre[1] - (meander_square_size[component]*0.5/39.37)
+
+        #determine end_x,end_y
+        end_x = centre[0] + (meander_square_size[component]*0.5/39.37)
+        end_y = centre[1] + (meander_square_size[component]*0.5/39.37)
+
+        #determine y_step
+        y_step = ((end_y - start_y) / k)
+
+        startpos = [start_x,start_y,centre[2],centre[3],centre[4],centre[5]]
+        rtde_control.moveL(startpos,speed=speed) #move to start position
+        #get next position
+        next_x = end_x
+        next_y = start_y
+        #meander
+        for i in range(k*2):
+            endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]] #move to next position
+            rtde_control.moveL(endpos,speed=speed)
+            if i % 2 == 0:
+                next_y = next_y + y_step #move to next layer
+            else:
+                if next_x == end_x: #move to other end
+                    next_x = start_x
+                else:
+                    next_x = end_x
+        #return to centre position of meander after meandering
+        rtde_control.moveL(centre,speed=speed)
 
 def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     global angle
@@ -201,10 +205,17 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     Terminal1button = {}
     Terminal2button = {}
     positive_battery_terminal_pos = {}
-    for wire in reinforced_wire_schematic: #for each wire in schematic 
-        for node in wire: #for each node in wire
-            if node['comp'] == "battery" and node['batteryneg'] == "p": 
+    positive_battery_neighbouring_node = {}
+    for wire in reinforced_wire_schematic: #for each wire in schematic
+        for i,node in enumerate(wire): #for each node in wire
+            if node['comp'] == "battery" and node['batteryneg'] == "p":
                 positive_battery_terminal_pos.update({node['comp_id']: node['pos']+[0,pi,0]}) #get positive terminals of all batteries present in circuit
+                #Find neighbouring node of positive battery terminal node
+                if i == 0:
+                    positive_battery_neighbouring_node.update({node['comp_id']: wire[1]['pos']+[0,pi,0]})
+                elif i == len(wire) - 1:
+                    positive_battery_neighbouring_node.update({node['comp_id']: wire[i-1]['pos']+[0,pi,0]})
+
             if node['comp'] == "button": #get all terminals of all buttons in schematic
                 key = node['comp_id']
                 if key in Terminal1button:
@@ -214,17 +225,31 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         Terminal2button.update({node['comp_id']: node['pos'][:2]})
                 else:
                     Terminal1button.update({node['comp_id']: node['pos'][:2]})
-    
+
+    for positiveterminals in positive_battery_terminal_pos:
+        rtde_control.moveL(positive_battery_terminal_pos[positiveterminals], speed=slow) #go to position
+        if not DRY_RUN:
+            set_pressure(PRINT_PRESSURE)
+            ink_on()
+            time.sleep(PRIMER_DELAY)
+        rtde_control.moveL(positive_battery_neighbouring_node[positiveterminals], speed=0.005) #go to position
+
+        ink_off()
+        node_position = positive_battery_neighbouring_node[positiveterminals]
+        node_z_heaven = node_position[2] + 50/1000 #Move to heaven (mm to m)
+        current_node_heaven = [node_position[0],node_position[1],node_z_heaven] + [0,pi,0]
+        rtde_control.moveL(current_node_heaven, speed=slow)
+
     for wire in reinforced_wire_schematic: #for each wire in schematic
         for i,node in enumerate(wire): #for each node in wire
-            if (i==0 or i==len(wire) - 1) and node['comp'] != "battery": #if last or first node and component is not battery
-                nodepos = node['pos']+[0,pi,0] 
+            if (i==0 or i==len(wire) - 1) and node['comp'] == "button": #if last or first node and component is button
+                nodepos = node['pos']+[0,pi,0]
                 rtde_control.moveL(nodepos, speed=slow) #go to position
                 if not DRY_RUN:
                     set_pressure(PRINT_PRESSURE)
                     ink_on()
                     time.sleep(PRIMER_DELAY)
-                
+
                 if node['comp'] == "button": #if component is button
                     key = node['comp_id']
                     x_button_diff = Terminal1button[key][0] - Terminal2button[key][0] #determine oreintation of button
@@ -233,13 +258,13 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         temp = reinforcements['button'][0]
                         reinforcements['button'][0] = reinforcements['button'][1]
                         reinforcements['button'][1] = temp
-   
-                meander_terminal(nodepos, node['comp'],reinforce=True) #meander
-                ink_off() #switch of ink
-                #Reset change of oreintation in reinforcement rectangle
-                temp = reinforcements['button'][0]
-                reinforcements['button'][0] = reinforcements['button'][1]
-                reinforcements['button'][1] = temp
+
+                    meander_terminal(nodepos, node['comp'],reinforce=True) #meander
+                    ink_off() #switch off ink
+                    #Reset change of oreintation in reinforcement rectangle
+                    temp = reinforcements['button'][0]
+                    reinforcements['button'][0] = reinforcements['button'][1]
+                    reinforcements['button'][1] = temp
 
                 node_z_heaven = nodepos[2] + 50/1000 #Move to heaven (mm to m)
                 current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
@@ -269,7 +294,7 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         angle = 180
 
                 radius = reinforcements['battery'][0]/39.37
-                minangle = angle - 120  
+                minangle = angle - 120
                 minangle = math.radians(minangle)
                 #determine start_x,start_y, move to start_x,start_y
                 start_x = (radius * math.cos(minangle)) + nodepos[0]
@@ -291,6 +316,10 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     return_inkprinter()
 
 def move_to_node(pos, comp, pole, index, maxindex,speed=0.005):
+    if index == 0:
+        speed = slow
+    else:
+        speed = 0.005
     if index == maxindex: #if this is the last node in the wire
         rtde_control.moveL(pos, speed=speed)
         printink(terminal_pos=pos,terminal_component=comp, terminal_polarity=pole) #call print_ink to meander
@@ -312,8 +341,8 @@ def ink_trace(file_path,dry_run=True):
     for wire in wire_schematic: #for each wire in schematic
         for i,node in enumerate(wire): #for each node in wire
             nodepos = node['pos']+[0,pi,0] #get node position
-            if i==0: #if first node of wire
-                rtde_control.moveL(nodepos, speed=fast) #move to position 
+            if i==0 and node['comp'] != "empty": #if first node of wire
+                rtde_control.moveL(nodepos, speed=fast) #move to position
                 printink(terminal_pos=nodepos,terminal_component=node['comp'], terminal_polarity=node['batteryneg']) #print ink
             else:
                 move_to_node(pos=nodepos,comp=node['comp'],pole=node['batteryneg'],index=i,maxindex=len(wire) - 1) #else move to node
@@ -328,9 +357,8 @@ def ink_trace(file_path,dry_run=True):
     return_inkprinter()
 
 #Test InkTracing Module
-# testing_run = False # False if extrusion, true if dry run
+# testing_run = True # False if extrusion, true if dry run
 # filename = r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\minimaltest.json"
 # ink_trace(filename,dry_run=testing_run)
 # reinforcement_schematic = get_traces(filename,reinforce=True)
 # reinforce_connection(reinforcement_schematic,dry_run=testing_run)
-

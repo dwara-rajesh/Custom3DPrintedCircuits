@@ -63,6 +63,39 @@
                 }
             ],
             "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -3.0,
+                    "posY": -2.378,
+                    "component": "button",
+                    "componentid": 1,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.4043,
+                    "posY": -1.7267,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -0.3041,
+                    "posY": -2.4229,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.0,
+                    "posY": -1.0,
+                    "component": "battery",
+                    "componentid": 0,
+                    "batteryneg": "n"
+                }
+            ],
+            "pole": "n"
         }
     ]
 }
