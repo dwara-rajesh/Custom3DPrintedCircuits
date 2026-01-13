@@ -3,11 +3,11 @@
         {
             "modelName": "stock",
             "f3dName": "stock.f3d",
-            "posX": -2.5,
-            "posY": -1.5,
-            "dimX": 5.0,
-            "dimY": 3.0,
-            "dimZ": 2.0,
+            "posX": -1.5,
+            "posY": -1.0,
+            "dimX": 3.0,
+            "dimY": 2.0,
+            "dimZ": 0.5,
             "rotX": 0.0,
             "rotY": 0.0,
             "rotZ": 0.0
@@ -15,54 +15,27 @@
         {
             "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\battery.obj",
             "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\battery.f3d",
-            "posX": -1.0,
+            "posX": -0.6,
             "posY": -1.0,
             "dimX": 0,
             "dimY": 0,
             "dimZ": 0,
             "rotX": 0,
             "rotY": 0,
-            "rotZ": 90
+            "rotZ": 0
         },
         {
             "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\button.obj",
             "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\button.f3d",
-            "posX": -3.0,
-            "posY": -2.0,
+            "posX": -2.0,
+            "posY": -1.0,
             "dimX": 0,
             "dimY": 0,
             "dimZ": 0,
             "rotX": 0,
             "rotY": 0,
-            "rotZ": 90
+            "rotZ": 0
         }
     ],
-    "wiresdata": [
-        {
-            "wireNodesdata": [
-                {
-                    "posX": -1.0,
-                    "posY": -0.61,
-                    "component": "battery",
-                    "componentid": 0,
-                    "batteryneg": "p"
-                },
-                {
-                    "posX": -3.0,
-                    "posY": -0.61,
-                    "component": null,
-                    "componentid": null,
-                    "batteryneg": null
-                },
-                {
-                    "posX": -3.0,
-                    "posY": -1.622,
-                    "component": "button",
-                    "componentid": 1,
-                    "batteryneg": null
-                }
-            ],
-            "pole": "p"
-        }
-    ]
+    "wiresdata": []
 }

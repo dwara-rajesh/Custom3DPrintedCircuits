@@ -385,7 +385,12 @@ class OpenGLViewer(QOpenGLWidget):
                             x_diff = abs(terminal[0] - clicked_terminal[0])
                             y_diff = abs(terminal[1] - clicked_terminal[1])
                             if terminal[0] == clicked_terminal[0] or terminal[1] == clicked_terminal[1]:
-                                pass
+                                if terminal[0] == clicked_terminal[0]:
+                                    node_y = (terminal[1] + clicked_terminal[1])/2
+                                    self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': node_y, 'component': None, 'componentid': None, 'batteryneg': None})
+                                elif terminal[1] == clicked_terminal[1]:
+                                    node_x = (terminal[0] + clicked_terminal[0])/2
+                                    self.wirenodesdata.append({'posX': node_x, 'posY': clicked_terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
                             elif y_diff >= 0.08 and x_diff >= 0.08:
                                 if x_diff > y_diff:
                                     self.wirenodesdata.append({'posX': clicked_terminal[0], 'posY': terminal[1], 'component': None, 'componentid': None, 'batteryneg': None})
