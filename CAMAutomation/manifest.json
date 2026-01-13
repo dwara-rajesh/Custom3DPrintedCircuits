@@ -1,0 +1,8 @@
+{
+    "name": "CAMAutomation",
+    "description": "Automate CAM based on CAD Design",
+    "author": "Dwarakesh",
+    "version": "1.0.0",
+    "runOnStartup": true,
+    "main": "camautomation.py"
+}

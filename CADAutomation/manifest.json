@@ -1,0 +1,8 @@
+{
+    "name": "CADAutomation",
+    "description": "Automate CAD based on circuit builder app output",
+    "author": "Dwarakesh",
+    "version": "1.0.0",
+    "runOnStartup": true,
+    "main": "cadautomation.py"
+}
