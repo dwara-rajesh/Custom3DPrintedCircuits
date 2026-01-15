@@ -8,7 +8,7 @@ import rtde_io
 import rtde_receive
 import rtde_control
 import keyboard
-from math import pi
+from math import pi, sqrt
 import json,os
 
 # Import core module:
@@ -23,6 +23,29 @@ PRIMER_DELAY = 0.360 # [s] Delay in seconds that the printer waits before starti
 PRINT_ACCEL = 0.8 # Printing uses reduced acceleration to avoid breaking the traces
 DRY_RUN = True
 angle = 0
+
+slant_line_height_inches = 0.059 #in inches
+slant_line_height = slant_line_height_inches / 39.37 #convert inches to m
+"""
+|<     node1 to node2     >|
+|< node1 to midpoint|
+---------------------------- _
+                     \       | slant_line_height
+                  ____\____  _
+"""
+
+trapezium_long_base_offset_inches = 0.063 #in inches. For negative terminal of battery -> neighbour node: trapezium long length - distance of negative terminal of battery -> neighbour node
+trapezium_height_inches = 0.047 #in inches. Height of trapezium
+trapezium_long_base_offset = trapezium_long_base_offset_inches / 39.37 #convert inches to m
+trapezium_height = trapezium_height_inches / 39.37 #convert inches to m
+"""
+|<trapezium_long_base_offset>|< trapezium long length>| _
+4----------------------------3------------------------0 ^
+                              \                      /  | trapezium_height
+                              2\____________________/1  _
+|<dist of negative battery terminal to neighbour node>|
+"""
+
 
 load_calibration_data() #obtain calibration data after calibration is complete
 z_origin_ink = CALIBRATION_DATA['ink'][2] + top_right_vise[2] #offset the origin by calibration data to avoid hitting the vise
@@ -74,7 +97,7 @@ def get_traces(recentsavefilepath,reinforce=False):
                 batteryneg = "empty"
             else:
                 batteryneg = node['batteryneg']
-            #get position (x,y,z) convert in to mm
+            #get position (x,y,z) convert in to m
             nodeX = (origin_ink[0] + (node['posX'] * 25.4)) / 1000
             nodeY = (origin_ink[1] + (node['posY'] * 25.4)) / 1000
             if not reinforce:
@@ -337,14 +360,98 @@ def ink_trace(file_path,dry_run=True):
     wire_schematic = get_traces(file_path) #get schematic
     grab_inkprinter() #grab ink printer
 
-    for wire in wire_schematic: #for each wire in schematic
-        for i,node in enumerate(wire): #for each node in wire
-            nodepos = node['pos']+[0,pi,0] #get node position
-            if i==0 and node['comp'] != "empty": #if first node of wire
-                rtde_control.moveL(nodepos, speed=fast) #move to position
-                printink(terminal_pos=nodepos,terminal_component=node['comp'], terminal_polarity=node['batteryneg']) #print ink
+    battery_wire_indices = []
+    for j, wire in enumerate(wire_schematic):
+        for i,node in enumerate(wire):
+            if node['comp'] == "battery":
+                battery_wire_indices.append({j:i})
+                break
+
+    for j, wire in enumerate(wire_schematic): #for each wire in schematic
+        if j in battery_wire_indices:
+            i = battery_wire_indices[j]
+            if i == 0:
+            #Print negative battery terminal properly
+                battery_terminal_x = wire[i]['pos'][0]
+                battery_terminal_y = wire[i]['pos'][1]
+                neighbour_node_x = wire[i+1]['pos'][0]
+                neighbour_node_y = wire[i+1]['pos'][1]
+                slant_neighbour_node_x = wire[i+2]['pos'][0]
+                slant_neighbour_node_y = wire[i+2]['pos'][1]
+                other_terminal = wire[i+3]
             else:
-                move_to_node(pos=nodepos,comp=node['comp'],pole=node['batteryneg'],index=i,maxindex=len(wire) - 1) #else move to node
+                battery_terminal_x = wire[i]['pos'][0]
+                battery_terminal_y = wire[i]['pos'][1]
+                neighbour_node_x = wire[i-1]['pos'][0]
+                neighbour_node_y = wire[i-1]['pos'][1]
+                slant_neighbour_node_x = wire[i-2]['pos'][0]
+                slant_neighbour_node_y = wire[i-2]['pos'][1]
+                other_terminal = wire[i-3]
+
+            #trapezium
+            dist_neg_battery_to_neighbour = sqrt(((neighbour_node_x - battery_terminal_x)**2) + ((neighbour_node_y - battery_terminal_y)**2))
+            #get point 1, point 2, point 3 of trapezium. PS: point 0 = battery negative terminal and point 4 = neighbour node
+            #point 1
+            x1 = ((dist_neg_battery_to_neighbour * (neighbour_node_x + (3 * battery_terminal_x))) + (trapezium_long_base_offset * (battery_terminal_x - neighbour_node_x))) / (4 * dist_neg_battery_to_neighbour)
+            y1 = ((dist_neg_battery_to_neighbour * (neighbour_node_y + (3 * battery_terminal_y))) + (trapezium_long_base_offset * (battery_terminal_y - neighbour_node_y))) / (4 * dist_neg_battery_to_neighbour)
+            z1 = wire[i]['pos'][2] - (trapezium_height + slant_line_height)
+            point_1_pos = [x1, y1, z1, 0, pi, 0]
+            #point 2
+            x2 = ((dist_neg_battery_to_neighbour * ((3 * neighbour_node_x) + battery_terminal_x)) + ((3 * trapezium_long_base_offset)*(battery_terminal_x - neighbour_node_x))) / (4 * dist_neg_battery_to_neighbour)
+            y2 = ((dist_neg_battery_to_neighbour * ((3 * neighbour_node_y) + battery_terminal_y)) + ((3 * trapezium_long_base_offset)*(battery_terminal_y - neighbour_node_y))) / (4 * dist_neg_battery_to_neighbour)
+            z2 = wire[i]['pos'][2] - (trapezium_height + slant_line_height)
+            point_2_pos = [x2, y2, z2, 0, pi, 0]
+            #point 3
+            x3 = ((dist_neg_battery_to_neighbour * neighbour_node_x) + (trapezium_long_base_offset * (battery_terminal_x - neighbour_node_x))) / dist_neg_battery_to_neighbour
+            y3 = ((dist_neg_battery_to_neighbour * neighbour_node_y) + (trapezium_long_base_offset * (battery_terminal_y - neighbour_node_y))) / dist_neg_battery_to_neighbour
+            z3 = wire[i]['pos'][2] - slant_line_height
+            point_3_pos = [x3, y3, z3, 0, pi, 0]
+
+            #slant
+            #slant_midpoint
+            slant_mid_x = (slant_neighbour_node_x + neighbour_node_x) / 2
+            slant_mid_y = (slant_neighbour_node_y + neighbour_node_y) / 2
+
+            slant_mid_pos = [slant_mid_x,slant_mid_y,wire[i]['pos'][2],0,pi,0]
+
+            if i == 0: #if battery negative terminal first : battery neg -> point 1 -> point 2 -> point 3 -> neighbour node(point 4) -> slant mid point ->
+                nodepos_battery = wire[i]['pos'] + [0,pi,0]
+                rtde_control.moveL(nodepos_battery, speed=fast) #move to battery negative terminal
+                printink(terminal_pos=nodepos_battery,terminal_component=wire[i]['comp'], terminal_polarity=wire[i]['batteryneg']) #print ink
+                rtde_control.moveL(point_1_pos, speed=0.005) #move to point 1 trapezium
+                rtde_control.moveL(point_2_pos, speed=0.005) #move to point 2 trapezium
+                rtde_control.moveL(point_3_pos, speed=0.005) #move to point 3 trapezium
+                nodepos_neighbour = [neighbour_node_x,neighbour_node_y,z3,0,pi,0]
+                rtde_control.moveL(nodepos_neighbour, speed= 0.005) #move to neighbour node (point 4)
+                rtde_control.moveL(slant_mid_pos, speed=0.005) #move to slant midpoint
+                nodepos_slant_neighbour = [slant_neighbour_node_x,slant_neighbour_node_y,slant_mid_pos[2],0,pi,0]
+                rtde_control.moveL(nodepos_slant_neighbour, speed=0.005) #move to slant neighbour
+                nodepos_other_terminal = other_terminal['pos'] + [0,pi,0]
+                rtde_control.moveL(nodepos_other_terminal, speed=0.005) #move to other terminal to finish wire connection
+            else:
+                nodepos_other_terminal = other_terminal['pos'] + [0,pi,0]
+                rtde_control.moveL(nodepos_other_terminal, speed=fast) #move to component
+                printink(terminal_pos=nodepos_other_terminal,terminal_component=other_terminal['comp'], terminal_polarity=other_terminal['batteryneg']) #print ink
+                nodepos_slant_neighbour = [slant_neighbour_node_x,slant_neighbour_node_y,slant_mid_pos[2],0,pi,0]
+                rtde_control.moveL(nodepos_slant_neighbour, speed=0.005) #move to slant neighbour
+                rtde_control.moveL(slant_mid_pos, speed=0.005) #move to slant midpoint
+                nodepos_neighbour = [neighbour_node_x,neighbour_node_y,z3,0,pi,0]
+                rtde_control.moveL(nodepos_neighbour, speed= 0.005) #move to neighbour node (point 4)
+                rtde_control.moveL(point_3_pos, speed=0.005) #move to point 3 trapezium
+                rtde_control.moveL(point_2_pos, speed=0.005) #move to point 2 trapezium
+                rtde_control.moveL(point_1_pos, speed=0.005) #move to point 1 trapezium
+                nodepos_battery = wire[i]['pos'] + [0,pi,0]
+                rtde_control.moveL(nodepos_battery, speed=fast) #move to battery negative terminal
+                printink(terminal_pos=nodepos_battery,terminal_component=wire[i]['comp'], terminal_polarity=wire[i]['batteryneg']) #print ink
+
+        else:
+            for i,node in enumerate(wire): #for each node in wire
+                nodepos = node['pos']+[0,pi,0] #get node position
+                if i==0 and node['comp'] != "empty": #if first node of wire
+                    rtde_control.moveL(nodepos, speed=fast) #move to position
+                    printink(terminal_pos=nodepos,terminal_component=node['comp'], terminal_polarity=node['batteryneg']) #print ink
+                else:
+                    move_to_node(pos=nodepos,comp=node['comp'],pole=node['batteryneg'],index=i,maxindex=len(wire) - 1) #else move to node
 
         ink_off() #after drawing wire, ink off
         z_heaven = wire[len(wire) - 1]['pos'][2] + 50/1000 #Move to heaven (mm to m)
