@@ -1,0 +1,101 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -1.5,
+            "posY": -1.0,
+            "dimX": 3.0,
+            "dimY": 2.0,
+            "dimZ": 0.5,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\battery.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\battery.f3d",
+            "posX": -1.0,
+            "posY": -1.0,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        },
+        {
+            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\models\\LED.obj",
+            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\assets\\f3ds\\LED.f3d",
+            "posX": -1.75,
+            "posY": -1.0,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 90
+        }
+    ],
+    "wiresdata": [
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -1.0,
+                    "posY": -0.61,
+                    "component": "battery",
+                    "componentid": 0,
+                    "batteryneg": "p"
+                },
+                {
+                    "posX": -1.75,
+                    "posY": -0.61,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.75,
+                    "posY": -0.8622,
+                    "component": "LED",
+                    "componentid": 1,
+                    "batteryneg": null
+                }
+            ],
+            "pole": "p"
+        },
+        {
+            "wireNodesdata": [
+                {
+                    "posX": -1.75,
+                    "posY": -1.1378,
+                    "component": "LED",
+                    "componentid": 1,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.75,
+                    "posY": -1.5312,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.0,
+                    "posY": -1.5312,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -1.0,
+                    "posY": -1.0,
+                    "component": "battery",
+                    "componentid": 0,
+                    "batteryneg": "n"
+                }
+            ],
+            "pole": "n"
+        }
+    ]
+}
