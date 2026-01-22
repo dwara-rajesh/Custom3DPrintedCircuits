@@ -15,7 +15,7 @@
         {
             "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\GUI\\assets\\models\\battery.obj",
             "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\GUI\\assets\\f3ds\\battery.f3d",
-            "posX": -0.5,
+            "posX": -2.5,
             "posY": -1.0,
             "dimX": 0,
             "dimY": 0,
@@ -25,21 +25,9 @@
             "rotZ": 90
         },
         {
-            "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\GUI\\assets\\models\\LED.obj",
-            "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\GUI\\assets\\f3ds\\LED.f3d",
-            "posX": -1.5,
-            "posY": -1.5,
-            "dimX": 0,
-            "dimY": 0,
-            "dimZ": 0,
-            "rotX": 0,
-            "rotY": 0,
-            "rotZ": 180
-        },
-        {
             "modelName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\GUI\\assets\\models\\button.obj",
             "f3dName": "D:\\BU\\Internship\\GUICADCAM Python\\Custom3DPrintedCircuits\\GUI\\assets\\f3ds\\button.f3d",
-            "posX": -2.5,
+            "posX": -0.5,
             "posY": -1.0,
             "dimX": 0,
             "dimY": 0,
@@ -53,24 +41,31 @@
         {
             "wireNodesdata": [
                 {
-                    "posX": -1.6378,
-                    "posY": -1.5,
-                    "component": "LED",
-                    "componentid": 1,
-                    "batteryneg": null
+                    "posX": -2.5,
+                    "posY": -0.64,
+                    "component": "battery",
+                    "componentid": 0,
+                    "batteryneg": "p"
                 },
                 {
-                    "posX": -2.5,
-                    "posY": -1.5,
+                    "posX": -2.502,
+                    "posY": -0.261,
                     "component": null,
                     "componentid": null,
                     "batteryneg": null
                 },
                 {
-                    "posX": -2.5,
-                    "posY": -1.378,
+                    "posX": -0.5077,
+                    "posY": -0.2398,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -0.5,
+                    "posY": -0.622,
                     "component": "button",
-                    "componentid": 2,
+                    "componentid": 1,
                     "batteryneg": null
                 }
             ],
@@ -79,35 +74,35 @@
         {
             "wireNodesdata": [
                 {
-                    "posX": -2.5,
-                    "posY": -0.622,
+                    "posX": -0.5,
+                    "posY": -1.378,
                     "component": "button",
-                    "componentid": 2,
+                    "componentid": 1,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -0.5082,
+                    "posY": -1.6242,
+                    "component": null,
+                    "componentid": null,
+                    "batteryneg": null
+                },
+                {
+                    "posX": -2.4897,
+                    "posY": -1.6663,
+                    "component": null,
+                    "componentid": null,
                     "batteryneg": null
                 },
                 {
                     "posX": -2.5,
-                    "posY": -0.51,
-                    "component": null,
-                    "componentid": null,
-                    "batteryneg": null
-                },
-                {
-                    "posX": -0.5,
-                    "posY": -0.51,
-                    "component": null,
-                    "componentid": null,
-                    "batteryneg": null
-                },
-                {
-                    "posX": -0.5,
-                    "posY": -0.61,
+                    "posY": -1.0,
                     "component": "battery",
                     "componentid": 0,
-                    "batteryneg": "p"
+                    "batteryneg": "n"
                 }
             ],
-            "pole": "p"
+            "pole": "n"
         }
     ]
 }

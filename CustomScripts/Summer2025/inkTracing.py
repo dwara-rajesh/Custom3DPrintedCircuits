@@ -39,9 +39,13 @@ meander_square_size = {"battery":0.025,
 #in inches - the size of reinforements
 reinforcements = {
     "battery": [0.375,0.375], #(l = radius of battery, w = radius of battery)
-    "button": [0.20,0.7], #(l = length of meander, w = width of meander) 
+    "button": [0.20,0.50], #(l = length of meander, w = width of meander)
 }
 wire_schematic = []
+
+#Keeps track of meandered and reinforced terminals to ensure it does not repeat
+meandered_terminals = []
+reinforced_terminals = []
 
 slant_line_height_inches = 0.059 #in inches
 slant_line_height = slant_line_height_inches / 39.37 #convert inches to m
@@ -124,7 +128,7 @@ def printink(terminal_pos, terminal_component, terminal_polarity,print_pressure=
         pressure_set = True
         if DRY_RUN == True:
             coreModule.set_pressure(coreModule.ATMOSPHERE) #no ink is extruded
-        else: 
+        else:
             coreModule.set_pressure(print_pressure) #ink is extruded
         time.sleep(pressure_stabilization)
         coreModule.ink_on()
@@ -135,8 +139,10 @@ def printink(terminal_pos, terminal_component, terminal_polarity,print_pressure=
     if terminal_component != "battery" or terminal_polarity == "n": #if component is not battery or if the terminal component is battery and is a negative terminal
         meander_terminal(terminal_pos,terminal_component) #then meander
 
-def meander_terminal(centre, component, k=3,speed=coreModule.precise, reinforce=False): 
+def meander_terminal(centre, component, k=3,speed=coreModule.precise, reinforce=False):
     global angle
+    global meandered_terminals
+    global reinforced_terminals
     component = component.lower()
     if reinforce:
         speed = PRINT_SPEED
@@ -178,6 +184,7 @@ def meander_terminal(centre, component, k=3,speed=coreModule.precise, reinforce=
                         next_x = end_x
 
             coreModule.rtde_control.moveL(centre,speed=speed)
+        reinforced_terminals.append({centre,component})
     else:
         '''
         Meander is a zig zag motion of sorts, if k = 3
@@ -187,37 +194,42 @@ def meander_terminal(centre, component, k=3,speed=coreModule.precise, reinforce=
             --------------->| y_step
         start_x,start_y
         '''
-        if component == "battery":
-            speed = PRINT_SPEED
-        #determine start_x,start_y
-        start_x = centre[0] - (meander_square_size[component]*0.5/39.37)
-        start_y = centre[1] - (meander_square_size[component]*0.5/39.37)
+        if {centre,component} in meandered_terminals:
+            pass
+        else:
+            if component == "battery":
+                speed = PRINT_SPEED
+            #determine start_x,start_y
+            start_x = centre[0] - (meander_square_size[component]*0.5/39.37)
+            start_y = centre[1] - (meander_square_size[component]*0.5/39.37)
 
-        #determine end_x,end_y
-        end_x = centre[0] + (meander_square_size[component]*0.5/39.37)
-        end_y = centre[1] + (meander_square_size[component]*0.5/39.37)
+            #determine end_x,end_y
+            end_x = centre[0] + (meander_square_size[component]*0.5/39.37)
+            end_y = centre[1] + (meander_square_size[component]*0.5/39.37)
 
-        #determine y_step
-        y_step = ((end_y - start_y) / k)
+            #determine y_step
+            y_step = ((end_y - start_y) / k)
 
-        startpos = [start_x,start_y,centre[2],centre[3],centre[4],centre[5]]
-        coreModule.rtde_control.moveL(startpos,speed=speed) #move to start position
-        #get next position
-        next_x = end_x
-        next_y = start_y
-        #meander
-        for i in range(k*2):
-            endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]] #move to next position
-            coreModule.rtde_control.moveL(endpos,speed=speed)
-            if i % 2 == 0: 
-                next_y = next_y + y_step #move to next layer
-            else:
-                if next_x == end_x: #move to other end
-                    next_x = start_x
+            startpos = [start_x,start_y,centre[2],centre[3],centre[4],centre[5]]
+            coreModule.rtde_control.moveL(startpos,speed=speed) #move to start position
+            #get next position
+            next_x = end_x
+            next_y = start_y
+            #meander
+            for i in range(k*2):
+                endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]] #move to next position
+                coreModule.rtde_control.moveL(endpos,speed=speed)
+                if i % 2 == 0:
+                    next_y = next_y + y_step #move to next layer
                 else:
-                    next_x = end_x
-        #return to centre position of meander after meandering
-        coreModule.rtde_control.moveL(centre,speed=speed)      
+                    if next_x == end_x: #move to other end
+                        next_x = start_x
+                    else:
+                        next_x = end_x
+            #return to centre position of meander after meandering
+            coreModule.rtde_control.moveL(centre,speed=speed)
+
+            meandered_terminals.append({centre,component})
 
 def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     global angle
@@ -225,6 +237,7 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     global reinforcements
     global pressure_stabilization
     global pressure_set
+    global reinforced_terminals
     pressure_set = False
     DRY_RUN = dry_run
     coreModule.grab_inkprinter()
@@ -234,16 +247,16 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     Terminal2button = {}
     positive_battery_terminal_pos = {}
     positive_battery_neighbouring_node = {}
-    for wire in reinforced_wire_schematic: #for each wire in schematic 
+    for wire in reinforced_wire_schematic: #for each wire in schematic
         for i,node in enumerate(wire): #for each node in wire
-            if node['comp'] == "battery" and node['batteryneg'] == "p": 
+            if node['comp'] == "battery" and node['batteryneg'] == "p":
                 positive_battery_terminal_pos.update({node['comp_id']: node['pos']+[0,pi,0]}) #get positive terminals of all batteries present in circuit
                 #Find neighbouring node of positive battery terminal node
                 if i == 0:
-                    positive_battery_neighbouring_node.update({node['comp_id']: wire[1]['pos']+[0,pi,0]}) 
+                    positive_battery_neighbouring_node.update({node['comp_id']: wire[1]['pos']+[0,pi,0]})
                 elif i == len(wire) - 1:
-                    positive_battery_neighbouring_node.update({node['comp_id']: wire[i-1]['pos']+[0,pi,0]}) 
-                 
+                    positive_battery_neighbouring_node.update({node['comp_id']: wire[i-1]['pos']+[0,pi,0]})
+
             if node['comp'] == "button": #get all terminals of all buttons in schematic
                 key = node['comp_id']
                 if key in Terminal1button:
@@ -260,7 +273,7 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
             pressure_set = True
             if DRY_RUN == True:
                 coreModule.set_pressure(coreModule.ATMOSPHERE) #no ink is extruded
-            else: 
+            else:
                 coreModule.set_pressure(PRINT_PRESSURE) #ink is extruded
             time.sleep(pressure_stabilization)
             coreModule.ink_on()
@@ -279,10 +292,7 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     for wire in reinforced_wire_schematic: #for each wire in schematic
         for i,node in enumerate(wire): #for each node in wire
             if node['comp'] == "button": #if component is button
-                nodepos = node['pos']+[0,pi,0] 
-                coreModule.rtde_control.moveL(nodepos, speed=coreModule.slow) #go to position
-                coreModule.ink_on()
-                time.sleep(PRIMER_DELAY)
+                nodepos = node['pos']+[0,pi,0]
                 key = node['comp_id']
                 x_button_diff = Terminal1button[key][0] - Terminal2button[key][0] #determine oreintation of button
                 if x_button_diff == 0:
@@ -312,18 +322,24 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         else:
                             nodepos[0] = nodepos[0] + 0.09 / 39.37
 
-                meander_terminal(nodepos, node['comp'],reinforce=True) #meander
-                coreModule.ink_off() #switch off ink
-                #Reset change of oreintation in reinforcement rectangle
-                if x_button_diff == 0:
-                    temp = reinforcements['button'][0]
-                    reinforcements['button'][0] = reinforcements['button'][1]
-                    reinforcements['button'][1] = temp
+                if {nodepos, node['comp']} in reinforced_terminals:
+                    pass
+                else:
+                    coreModule.rtde_control.moveL(nodepos, speed=coreModule.slow) #go to position
+                    coreModule.ink_on()
+                    time.sleep(PRIMER_DELAY)
+                    meander_terminal(nodepos, node['comp'],reinforce=True) #meander
+                    coreModule.ink_off() #switch off ink
+                    #Reset change of oreintation in reinforcement rectangle
+                    if x_button_diff == 0:
+                        temp = reinforcements['button'][0]
+                        reinforcements['button'][0] = reinforcements['button'][1]
+                        reinforcements['button'][1] = temp
 
-                node_z_heaven = nodepos[2] + 50/1000 #Move to heaven (mm to m)
-                current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
-                time.sleep(0.1)
-                coreModule.rtde_control.moveL(current_node_heaven, speed=coreModule.fast)
+                    node_z_heaven = nodepos[2] + 50/1000 #Move to heaven (mm to m)
+                    current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
+                    time.sleep(0.1)
+                    coreModule.rtde_control.moveL(current_node_heaven, speed=coreModule.fast)
 
             if node['comp'] == "battery" and node['batteryneg'] == "n": #if component is battery and terminal is negative
                 nodepos = node['pos']+[0,pi,0] #get node position
@@ -349,22 +365,25 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         angle = 180
 
                 radius = reinforcements['battery'][0]/39.37
-                minangle = angle - 120  
+                minangle = angle - 120
                 minangle = radians(minangle)
                 #determine start_x,start_y, move to start_x,start_y
                 start_x = (radius * cos(minangle)) + nodepos[0]
                 start_y = (radius * sin(minangle)) + nodepos[1]
                 startpos = [start_x,start_y,nodepos[2],nodepos[3],nodepos[4],nodepos[5]]
-                coreModule.rtde_control.moveL(startpos,speed=coreModule.slow)
 
-                coreModule.ink_on()
-                time.sleep(PRIMER_DELAY)
-                meander_terminal(nodepos, node['comp'],reinforce=True) #meander/reinforce battery
-                coreModule.ink_off()
-                node_z_heaven = nodepos[2] + 50/1000 #Move to heaven (mm to m)
-                current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
-                time.sleep(0.1)
-                coreModule.rtde_control.moveL(current_node_heaven, speed=coreModule.fast)
+                if {nodepos, node['comp']} in reinforced_terminals:
+                    pass
+                else:
+                    coreModule.rtde_control.moveL(startpos,speed=coreModule.slow)
+                    coreModule.ink_on()
+                    time.sleep(PRIMER_DELAY)
+                    meander_terminal(nodepos, node['comp'],reinforce=True) #meander/reinforce battery
+                    coreModule.ink_off()
+                    node_z_heaven = nodepos[2] + 50/1000 #Move to heaven (mm to m)
+                    current_node_heaven = [nodepos[0],nodepos[1],node_z_heaven] + [0,pi,0]
+                    time.sleep(0.1)
+                    coreModule.rtde_control.moveL(current_node_heaven, speed=coreModule.fast)
 
     coreModule.return_inkprinter()
 
@@ -377,7 +396,7 @@ def move_to_node(pos, comp, pole, index, maxindex,speed=PRINT_SPEED):
             pressure_set = True
             if DRY_RUN == True:
                 coreModule.set_pressure(coreModule.ATMOSPHERE) #no ink is extruded
-            else: 
+            else:
                 coreModule.set_pressure(PRINT_PRESSURE) #ink is extruded
             time.sleep(pressure_stabilization)
             coreModule.ink_on()
@@ -492,7 +511,7 @@ def ink_trace(file_path,dry_run=True):
                 printink(terminal_pos=nodepos_battery,terminal_component=wire[i]['comp'], terminal_polarity=wire[i]['batteryneg']) #print ink
                 z_heaven = wire[i]['pos'][2] + 50/1000 #Move to heaven (mm to m)
                 node_heaven = [wire[i]['pos'][0],wire[i]['pos'][1],z_heaven] + [0,pi,0]
-            
+
             coreModule.ink_off()
             time.sleep(0.1)
             coreModule.rtde_control.moveL(node_heaven, speed=coreModule.fast)
