@@ -241,10 +241,11 @@ class CircuitBuilderWindow(QMainWindow):
                 i += 1
 
         self.viewer.wiredata = data['wiresdata'] #Load wire data from the file
-        for wire in data['wiresdata']: #For each wire
-            for nodedata in wire['wireNodesdata']: #For each node in wire
-                self.viewer.wirenodesdata.append(nodedata) #Add to wire node data for drawing
+        self.viewer.wirenodesdata.clear()
+        for wire in self.viewer.wiredata: #For each wire
+            self.viewer.wirenodesdata.extend(wire['wireNodesdata']) #Add to wire node data for drawing
 
+        self.viewer.start = len(self.viewer.wirenodesdata)
         self.viewer.stockdrawn = True #Stock is drawn
         self.update_offset_validators() #Update validators
         self.viewer.update() #Refresh the Viewer to show changes
