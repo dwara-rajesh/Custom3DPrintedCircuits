@@ -382,6 +382,7 @@ def PNP_Test(): #to test yield for new vacuum heads, ENSURE ALL SLOTS ARE FILLED
             pos = coreModule.rtde_receive.getActualTCPPose() #get current position
             pos[2] -= 54/1000 #offset z value for placing
             place_component(pos[:3],0) #place back into slot
+    coreModule.rtde_control.moveL(coreModule.standby, speed=coreModule.fast)
     coreModule.return_nozzle() #return nozzle
 
 ## TESTING: Uncomment only on module testing event
