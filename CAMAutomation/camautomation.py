@@ -457,7 +457,7 @@ def run(context):
 
         ncParameters = ncProgramInput.parameters
 
-        ncParameters.itemByName('nc_program_comment').value.value = programComment
+        ncParameters.itemByName('nc_program_comment').value.value = programName
         ncParameters.itemByName('nc_program_name').value.value = f'{programNumber}'
         ncParameters.itemByName('nc_program_filename').value.value = programName
         ncParameters.itemByName('nc_program_unit').value.value = 'Inches' #adsk.cam.PostOutputUnitOptions.InchesOutput
