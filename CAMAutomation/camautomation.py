@@ -447,12 +447,12 @@ def run(context):
 
         programComment = 'Automatic CAM Program'
 
-        programNumber_base = 10000
+        programNumber_base = 10005
         num_nc_files = count_files(outputfolder)
         programNumber = programNumber_base + num_nc_files
         ncPrograms = cam.ncPrograms
         ncProgramInput = ncPrograms.createInput()
-        ncProgramInput.displayName = programComment
+        ncProgramInput.displayName = programName
         ncProgramInput.operations = list(setup.operations)
 
         ncParameters = ncProgramInput.parameters
