@@ -225,7 +225,7 @@ def run(context):
         f360LibraryURLs = toolLibs.childAssetURLs(localLibLocationURL)
         toolLib = None
         for libURL in f360LibraryURLs:
-            if 'Library' in libURL.leafName:
+            if 'CircuitPrintingToolLibrary' in libURL.leafName:
                 toolLib = toolLibs.toolLibraryAtURL(libURL)
 
         selectedtool = None
