@@ -482,7 +482,9 @@ def run(context):
         postOptions = adsk.cam.NCProgramPostProcessOptions.create()
         ncProgram.postProcess(postOptions)
 
-        add_footer(outputfolder +"/" + programName + ".nc",ui)
+        programName = programName + ".nc"
+        outputfilepath = os.path.join(outputfolder, programName)
+        add_footer(outputfilepath,ui)
     except:
         if ui:
             ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
