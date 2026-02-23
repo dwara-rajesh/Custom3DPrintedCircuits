@@ -436,7 +436,16 @@ def run(context):
             if 'haas' in libURL.leafName:
                 postConfig = postConfigLib.postConfigurationAtURL(libURL)
 
-        outputfolder = "D:/BU/Internship/GUICADCAM Python/Custom3DPrintedCircuits/NCPrograms"
+        folder_dialog = ui.createFolderDialog()
+        folder_dialog.title = "Select Output Folder for NC File"
+
+        outputfolder = None
+        while outputfolder is None:
+            dialog_result = folder_dialog.showDialog()
+
+            if dialog_result == adsk.core.DialogResults.DialogOK:
+                outputfolder = folder_dialog.folder
+
         programName = None
         while programName is None:
             programName_save = ui.inputBox('Please enter filename:', 'Enter Filename')
