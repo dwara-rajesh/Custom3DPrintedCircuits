@@ -1,5 +1,5 @@
 %
-O10023 (Automatic CAM Program)
+O10023 (DEMO2)
 (Using high feed G1 F196.85 instead of G0.)
 (T1 D=0.125 CR=0. - ZMIN=0.374 - flat end mill)
 (T5 D=0.25 CR=0. TAPER=90deg - ZMIN=0.4291 - spot drill)
