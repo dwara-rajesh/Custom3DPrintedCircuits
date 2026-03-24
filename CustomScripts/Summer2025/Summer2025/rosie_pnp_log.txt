@@ -1,0 +1,207 @@
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #1 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [1]
+Placing component [battery] in Coordinates: [234.64802509090453, -404.1683255468033, 143.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #1 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [1]
+Placing component [button] in Coordinates: [183.8480250909045, -404.1683255468033, 150.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #1 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [1]
+Placing component [led] in Coordinates: [238.97872509090453, -355.38762554680335, 144.91008890017855]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #2 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [2]
+Placing component [battery] in Coordinates: [234.64802509090453, -404.1683255468033, 143.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #2 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [2]
+Placing component [button] in Coordinates: [183.8480250909045, -404.1683255468033, 150.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #2 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [2]
+Placing component [led] in Coordinates: [238.97872509090453, -355.38762554680335, 144.91008890017855]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #3 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [3]
+Placing component [battery] in Coordinates: [234.64802509090453, -404.1683255468033, 143.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #3 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [3]
+Placing component [button] in Coordinates: [183.8480250909045, -404.1683255468033, 150.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #3 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [3]
+Placing component [led] in Coordinates: [238.97872509090453, -355.38762554680335, 144.91008890017855]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #4 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [4]
+Placing component [battery] in Coordinates: [234.64802509090453, -404.1683255468033, 143.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #4 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [4]
+Placing component [button] in Coordinates: [183.8480250909045, -404.1683255468033, 150.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #4 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [4]
+Placing component [led] in Coordinates: [238.97872509090453, -355.38762554680335, 144.91008890017855]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #1 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [1]
+Placing component [battery] in Coordinates: [234.64802509090453, -404.1683255468033, 143.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #1 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [1]
+Placing component [button] in Coordinates: [183.8480250909045, -404.1683255468033, 149.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #1 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [1]
+Placing component [led] in Coordinates: [238.97872509090453, -355.38762554680335, 144.41008890017855]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #2 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [2]
+Placing component [battery] in Coordinates: [234.64802509090453, -404.1683255468033, 143.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #2 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [2]
+Placing component [button] in Coordinates: [183.8480250909045, -404.1683255468033, 150.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #2 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [2]
+Placing component [led] in Coordinates: [238.97872509090453, -355.38762554680335, 144.91008890017855]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #3 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [3]
+Placing component [battery] in Coordinates: [234.5480250909045, -404.26832554680334, 143.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #3 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [3]
+Placing component [button] in Coordinates: [183.74802509090452, -404.26832554680334, 150.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #3 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [3]
+Placing component [led] in Coordinates: [238.87872509090454, -355.4876255468034, 144.01008890017854]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #4 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [4]
+Placing component [battery] in Coordinates: [233.64802509090453, -405.1683255468033, 143.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #4 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [4]
+Placing component [button] in Coordinates: [182.8480250909045, -405.1683255468033, 150.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #4 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [4]
+Placing component [led] in Coordinates: [237.97872509090453, -356.38762554680335, 144.01008890017854]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
+Pick-and-Place - Schematic assembly started...
+Pick-and-Place - Closing and cycling vice...
+Pick-and-Place - Moving to standby waypoint...
+Pick-and-Place - Starting component assembly sequence...
+Pick-and-Place: 1/3
+Picking up battery #5 from battery inventory grid
+Vacuum On
+Pick N Place: Picked up [battery] from slot [5]
+Placing component [battery] in Coordinates: [233.64802509090453, -405.1683255468033, 143.51008890017854]
+Placed Component Successfully
+Pick-and-Place: 2/3
+Picking up button #5 from button inventory grid
+Vacuum On
+Pick N Place: Picked up [button] from slot [5]
+Placing component [button] in Coordinates: [182.8480250909045, -405.1683255468033, 150.01008890017854]
+Placed Component Successfully
+Pick-and-Place: 3/3
+Picking up led #5 from led inventory grid
+Vacuum On
+Pick N Place: Picked up [led] from slot [5]
+Placing component [led] in Coordinates: [237.97872509090453, -356.38762554680335, 144.01008890017854]
+Placed Component Successfully
+Pick-and-Place - Assembly complete! Returning to standby...
