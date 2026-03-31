@@ -1,0 +1,29 @@
+{
+    "componentdata": [
+        {
+            "modelName": "stock",
+            "f3dName": "stock.f3d",
+            "posX": -1.5,
+            "posY": -1.0,
+            "dimX": 3.0,
+            "dimY": 2.0,
+            "dimZ": 0.5,
+            "rotX": 0.0,
+            "rotY": 0.0,
+            "rotZ": 0.0
+        },
+        {
+            "modelName": "D:\\Projects\\Custom3DPrintedCircuits-main\\Custom3DPrintedCircuits-main\\GUI\\assets\\models\\microcontroller.obj",
+            "f3dName": "D:\\Projects\\Custom3DPrintedCircuits-main\\Custom3DPrintedCircuits-main\\GUI\\assets\\f3ds\\microcontroller.f3d",
+            "posX": -1.5,
+            "posY": -1.0,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        }
+    ],
+    "wiresdata": []
+}

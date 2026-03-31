@@ -15,7 +15,7 @@
         {
             "modelName": "D:\\Projects\\Custom3DPrintedCircuits-main\\Custom3DPrintedCircuits-main\\GUI\\assets\\models\\battery.obj",
             "f3dName": "D:\\Projects\\Custom3DPrintedCircuits-main\\Custom3DPrintedCircuits-main\\GUI\\assets\\f3ds\\battery.f3d",
-            "posX": -0.5,
+            "posX": -2.5,
             "posY": -0.5,
             "dimX": 0,
             "dimY": 0,
@@ -41,6 +41,18 @@
             "f3dName": "D:\\Projects\\Custom3DPrintedCircuits-main\\Custom3DPrintedCircuits-main\\GUI\\assets\\f3ds\\LED.f3d",
             "posX": -1.5,
             "posY": -0.25,
+            "dimX": 0,
+            "dimY": 0,
+            "dimZ": 0,
+            "rotX": 0,
+            "rotY": 0,
+            "rotZ": 0
+        },
+        {
+            "modelName": "D:\\Projects\\Custom3DPrintedCircuits-main\\Custom3DPrintedCircuits-main\\GUI\\assets\\models\\microcontroller.obj",
+            "f3dName": "D:\\Projects\\Custom3DPrintedCircuits-main\\Custom3DPrintedCircuits-main\\GUI\\assets\\f3ds\\microcontroller.f3d",
+            "posX": -1.0,
+            "posY": -1.5,
             "dimX": 0,
             "dimY": 0,
             "dimZ": 0,
