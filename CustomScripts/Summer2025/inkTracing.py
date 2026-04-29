@@ -10,7 +10,7 @@ import json
 import coreModule
 
 # Ink printing extrusion parameters
-PRINT_PRESSURE = 40 #reduce if too much extrusion of ink is too much # [psi] Pressure of the pneumatic extrusion line - Original value: 70psi
+PRINT_PRESSURE = 40 #reduce if too much extrusion of ink is too much # [psi] Pressure of the pneumatic extrusion line - Original value: 40psi
 PRINT_SPEED = 0.005
 REINFORCEMENT_PRINT_SPEED = 0.01
 
@@ -21,6 +21,7 @@ pressure_stabilization = 1.0 # in seconds to wait for pressure stabilization in 
 pressure_set = False
 DRY_RUN = True
 angle = 0
+button_angle = 0
 
 # Testing parameters - Uncomment only on module testing event
 # filename = r"C:\git\ADML\Automated Circuit Printing and Assembly\Summer2025\DEMO2.json" #circuit being tested
@@ -40,7 +41,8 @@ origin_ink = [val * 1000 for val in origin_in_m_ink[:3]] + [0,pi,0] #origin in m
 meander_square_size = {"battery":0.025,
                   "microcontroller":0.005,
                   "button":0.01,
-                  "led":0.005}
+                  "led":0.005,
+                  "stockcorner":0.0}
 #in inches - the size of reinforements
 reinforcements = {
     "battery": [0.375,0.375], #(l = radius of battery, w = radius of battery)
@@ -146,6 +148,7 @@ def printink(terminal_pos, terminal_component, terminal_polarity,print_pressure=
 
 def meander_terminal(centre, component, k=3,speed=coreModule.precise, reinforce=False):
     global angle
+    global button_angle
     global meandered_terminals
     global reinforced_terminals
     component = component.lower()
@@ -165,6 +168,7 @@ def meander_terminal(centre, component, k=3,speed=coreModule.precise, reinforce=
                 endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]]
                 coreModule.rtde_control.moveL(endpos,speed=speed) #move to position
         else: #if any other component, meander with larger sizes
+            
             speed = REINFORCEMENT_PRINT_SPEED
             start_x = centre[0] - (reinforcements[component][0]*0.5/39.37)
             start_y = centre[1] - (reinforcements[component][1]*0.5/39.37)
@@ -172,22 +176,37 @@ def meander_terminal(centre, component, k=3,speed=coreModule.precise, reinforce=
             end_x = centre[0] + (reinforcements[component][0]*0.5/39.37)
             end_y = centre[1] + (reinforcements[component][1]*0.5/39.37)
 
-            y_step = ((end_y - start_y) / k)
+            
 
             startpos = [start_x,start_y,centre[2],centre[3],centre[4],centre[5]]
             coreModule.rtde_control.moveL(startpos,speed=speed)
-            next_x = end_x
-            next_y = start_y
+            if button_angle == 90:
+                next_x = end_x
+                next_y = start_y
+                step = ((end_y - start_y) / k)
+            else:
+                next_x = start_x
+                next_y = end_y
+                step = ((end_x - start_x) / k)
             for i in range(k*2):
                 endpos = [next_x,next_y,centre[2],centre[3],centre[4],centre[5]]
                 coreModule.rtde_control.moveL(endpos,speed=speed)
                 if i % 2 == 0:
-                    next_y = next_y + y_step
-                else:
-                    if next_x == end_x:
-                        next_x = start_x
+                    if button_angle == 90:
+                        next_y = next_y + step
                     else:
-                        next_x = end_x
+                        next_x = next_x + step
+                else:
+                    if button_angle == 90:
+                        if next_x == end_x:
+                            next_x = start_x
+                        else:
+                            next_x = end_x
+                    else:
+                        if next_y == end_y:
+                            next_y = start_y
+                        else:
+                            next_y = end_y
 
             coreModule.rtde_control.moveL(centre,speed=speed)
         reinforced_terminals.append([centre,component])
@@ -239,6 +258,7 @@ def meander_terminal(centre, component, k=3,speed=coreModule.precise, reinforce=
 
 def reinforce_connection(reinforced_wire_schematic, dry_run = True):
     global angle
+    global button_angle
     global DRY_RUN
     global reinforcements
     global pressure_stabilization
@@ -272,7 +292,6 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                         Terminal2button.update({node['comp_id']: node['pos'][:2]})
                 else:
                     Terminal1button.update({node['comp_id']: node['pos'][:2]})
-
     for positiveterminals in positive_battery_terminal_pos:
         coreModule.rtde_control.moveL(positive_battery_terminal_pos[positiveterminals], speed=coreModule.slow) #go to position
         if not pressure_set:
@@ -302,6 +321,7 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                 key = node['comp_id']
                 x_button_diff = Terminal1button[key][0] - Terminal2button[key][0] #determine oreintation of button
                 if x_button_diff == 0:
+                    button_angle = 90
                     if (nodepos[:2] == Terminal1button[key]):
                         if (Terminal1button[key][1] > Terminal2button[key][1]):
                             nodepos[1] = nodepos[1] + 0.09 / 39.37
@@ -317,6 +337,7 @@ def reinforce_connection(reinforced_wire_schematic, dry_run = True):
                     reinforcements['button'][0] = reinforcements['button'][1]
                     reinforcements['button'][1] = temp
                 else:
+                    button_angle = 0
                     if (nodepos[:2] == Terminal1button[key]):
                         if (Terminal1button[key][0] > Terminal2button[key][0]):
                             nodepos[0] = nodepos[0] + 0.09 / 39.37
@@ -540,7 +561,7 @@ def ink_trace(file_path,dry_run=True):
 
 ## TESTING: Uncomment only on module testing event
 # # Testing parameters
-# testing_run = False # False if extrusion, true if dry run
+# testing_run = True # False if extrusion, true if dry run
 
 # # Test InkTracing Module
 # ink_trace(filename,dry_run=testing_run) #IMPORTANT: This will NOT draw the positive wire of battery
