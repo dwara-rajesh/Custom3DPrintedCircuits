@@ -41,8 +41,7 @@ origin_ink = [val * 1000 for val in origin_in_m_ink[:3]] + [0,pi,0] #origin in m
 meander_square_size = {"battery":0.025,
                   "microcontroller":0.005,
                   "button":0.01,
-                  "led":0.005,
-                  "stockcorner":0.0}
+                  "led":0.005}
 #in inches - the size of reinforements
 reinforcements = {
     "battery": [0.375,0.375], #(l = radius of battery, w = radius of battery)
